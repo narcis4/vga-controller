@@ -1,4 +1,4 @@
---------------------------------------------------------------------------------
+/*--------------------------------------------------------------------------------
 ----                                                                        ----
 ---- This file is part of the yaVGA project                                 ----
 ---- http://www.opencores.org/?do=project&who=yavga                         ----
@@ -45,12 +45,12 @@
 ---- LIABILITY,  OR  TORT  (INCLUDING  NEGLIGENCE  OR OTHERWISE) ARISING IN ----
 ---- ANY  WAY OUT  OF THE  USE  OF  THIS  SOFTWARE,  EVEN IF ADVISED OF THE ----
 ---- POSSIBILITY OF SUCH DAMAGE.                                            ----
---------------------------------------------------------------------------------
+--------------------------------------------------------------------------------*/
 module buffer 
 #(
     parameter h_tiles = 640/8,  // 640x480 resolution and chars of 8x16 pixels
     parameter v_tiles = 480/16,
-    parameter num_tiles = h_tiles*v_tiles // 2400
+    parameter num_tiles = h_tiles*v_tiles, // 2400
     parameter addr_width = 12,  // log2(640/8 * 480/16)
     parameter data_width = 7 // 128 possible characters
 )
@@ -65,7 +65,7 @@ module buffer
     output reg [data_width-1:0] dout   // data read
 );
 
-reg [data_width-1:0] bmem [0:(v_tiles)-1][0:(h_tiles)-1]; // memory of the current frame
+reg [data_width-1:0] bmem [0:num_tiles-1]; // memory of the current frame
 
 // memory initialization
 integer i,j;
@@ -74,28 +74,28 @@ initial begin
         for (j=0; j<h_tiles;j=j+1) begin
             if (i == j) begin
                 case (i)
-                    0: bmem[i][j]=7'd48; // ASCII code, 0 to 9 in the diagonal test
-                    1: bmem[i][j]=7'd49;
-                    2: bmem[i][j]=7'd50;
-                    3: bmem[i][j]=7'd51;
-                    4: bmem[i][j]=7'd52;
-                    5: bmem[i][j]=7'd53;
-                    6: bmem[i][j]=7'd54;
-                    7: bmem[i][j]=7'd55;
-                    8: bmem[i][j]=7'd56;
-                    9: bmem[i][j]=7'd57;
+                    0: bmem[i*h_tiles+j]=7'd48; // ASCII code, 0 to 9 in the diagonal test
+                    1: bmem[i*h_tiles+j]=7'd49;
+                    2: bmem[i*h_tiles+j]=7'd50;
+                    3: bmem[i*h_tiles+j]=7'd51;
+                    4: bmem[i*h_tiles+j]=7'd52;
+                    5: bmem[i*h_tiles+j]=7'd53;
+                    6: bmem[i*h_tiles+j]=7'd54;
+                    7: bmem[i*h_tiles+j]=7'd55;
+                    8: bmem[i*h_tiles+j]=7'd56;
+                    9: bmem[i*h_tiles+j]=7'd57;
                 endcase
             end
-            bmem[i][j]=7'b0;
+            else bmem[i*h_tiles+j]=7'd00;
         end
     end
 end
 
 always @(posedge clk)
 begin
-    dout = bmem[row_r][col_r]; // Output register controlled by clock.
+    dout <= bmem[row_r * h_tiles + col_r]; // Output register controlled by clock.
     if (wr_en) begin
-        bmem[row_w][col_w] = din; // Write to tile
+        bmem[row_w * h_tiles + col_w] <= din; // Write to tile
     end
 end
 

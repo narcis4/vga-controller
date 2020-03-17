@@ -19,18 +19,17 @@
 //-----------------------------------------------------------------------------
 module fontMem 
 #(
-    parameter FONT_FILE = "charmem.list",
+    parameter FONT_FILE = "charmem2.list",
     parameter addr_width = 7,  // 128 characters
-    parameter h_pix = 8, // 8x16 pixels characters 
-    parameter v_pix = 16
+    parameter data_width = 8*16 // 8x16 pixels characters
 )
 (
     input wire                  clk,
     input wire [addr_width-1:0] addr,
-    output reg [0:v_pix-1][h_pix-1:0] dout
+    output reg [0:data_width-1] dout
 );
 
-reg [0:v_pix-1] [h_pix-1:0] mem [0:(1 << addr_width)-1]; // memory of the characters bitmap
+reg [0:data_width-1] mem [0:(1 << addr_width)-1]; // memory of the characters bitmap
 
 // memory initialization
 initial begin
@@ -39,7 +38,7 @@ end
 
 always @(posedge clk)
 begin
-    dout = mem[addr]; // Output register controlled by clock.
+    dout <= mem[addr]; // Output register controlled by clock.
 end
 
 endmodule

@@ -91,8 +91,8 @@ module top (
         //if that assertions fail current_col current_row range need to change
         //along other parameters as the lookup and pixel within image
     `endif
-    wire [9:0] current_col;
-    wire [9:0] current_row;
+    wire [6:0] current_col;
+    wire [4:0] current_row;
     assign current_col = x_px[9:3]; // column of the current tile
     assign current_row = y_px[9:4]; // row of the current tile
     //x_img and y_img are used to index within the look up
@@ -111,13 +111,14 @@ module top (
     assign din = 7'd0;
 
     reg [6:0] char_addr; // address of the char in the bitmap, ASCII code
-    reg [0:Cheight-1][Cwidth-1:0] char; // bitmap of 1 character
+    reg [0:Cwidth*Cheight-1] char; // bitmap of 1 character
     
     buffer buf_inst( .clk(clk), .wr_en(wr_en), .col_w(col_w), .row_w(row_w), .col_r(current_col), .row_r(current_row), .din(din), .dout(char_addr));
     fontMem fmem_inst( .clk(clk), .addr(char_addr), .dout(char));
 
     //Update next pixel color
-    always @(posedge clk, negedge rstn) begin
+    //always @(posedge clk, negedge rstn) begin
+    always @(posedge clk) begin
         /*
         if (!rstn) begin
                 R_int <= 4'b0;
@@ -129,9 +130,9 @@ module top (
         //if We don't use the active video pixel value will increase in the 
         //section outside the display as well.
         if (activevideo) begin
-                R_int <= {4{char[y_img][x_img]}}; // replicate current pixel x4 to draw white if 1 or black otherwise
-                G_int <= {4{char[y_img][x_img]}};
-                B_int <= {4{char[y_img][x_img]}};
+                R_int <= {4{char[y_img*Cwidth+x_img]}}; // replicate current pixel x4 to draw white if 1 or black otherwise
+                G_int <= {4{char[y_img*Cwidth+x_img]}};
+                B_int <= {4{char[y_img*Cwidth+x_img]}};
         end
     end
 

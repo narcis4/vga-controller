@@ -27,7 +27,7 @@ module VGAsyncGen (
             output wire      vsync,         // Vertical sync out
             output reg [9:0] x_px,          // X position for actual pixel.
             output reg [9:0] y_px,          // Y position for actual pixel.
-            output wire      activevideo,
+            output wire      activevideo
          );
 
     // Video structure constants for 640x480@60Hz
