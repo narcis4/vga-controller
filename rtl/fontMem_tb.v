@@ -1,4 +1,4 @@
-`timescale 1ns/100ps
+`timescale 1ns/1ns
 
 module fontMem_tb;
 
@@ -9,13 +9,13 @@ module fontMem_tb;
     initial begin
         $dumpfile("fontMem_tb.vcd");
         $dumpvars(0, fontMem_tb);
+        wait(addr == 7'd127); // last character
+        $finish;
     end
 
     initial begin
         clk = 1'b0;
         addr = 7'd0;
-        wait(addr == 128);
-        $finish;
     end
         
     fontMem fmem_inst( .clk(clk), .addr(addr));

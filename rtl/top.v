@@ -91,6 +91,10 @@ module top (
         //if that assertions fail current_col current_row range need to change
         //along other parameters as the lookup and pixel within image
     `endif
+
+    localparam Color0 = 4'b0000; // black background
+    localparam Color1 = 4'b1111; // white characters
+
     wire [6:0] current_col;
     wire [4:0] current_row;
     assign current_col = x_px[9:3]; // column of the current tile
@@ -119,20 +123,19 @@ module top (
     //Update next pixel color
     //always @(posedge clk, negedge rstn) begin
     always @(posedge clk) begin
-        /*
-        if (!rstn) begin
-                R_int <= 4'b0;
-                G_int <= 4'b0;
-                B_int <= 4'b0;
-        end else
-        */
+        //if (!rstn) begin
+                //R_int <= 4'b0;
+                //G_int <= 4'b0;
+                //B_int <= 4'b0;
+        //end else
+        
         //remember that there is a section outside the screen
         //if We don't use the active video pixel value will increase in the 
         //section outside the display as well.
         if (activevideo) begin
-                R_int <= {4{char[y_img*Cwidth+x_img]}}; // replicate current pixel x4 to draw white if 1 or black otherwise
-                G_int <= {4{char[y_img*Cwidth+x_img]}};
-                B_int <= {4{char[y_img*Cwidth+x_img]}};
+                R_int <= char[y_img*Cwidth+x_img] ? Color1 : Color0; // paint white if pixel from the bitmap is active, black otherwise
+                G_int <= char[y_img*Cwidth+x_img] ? Color1 : Color0; 
+                B_int <= char[y_img*Cwidth+x_img] ? Color1 : Color0; 
         end
     end
 
