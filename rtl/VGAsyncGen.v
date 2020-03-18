@@ -27,6 +27,8 @@ module VGAsyncGen (
             output wire      vsync,         // Vertical sync out
             output reg [9:0] x_px,          // X position for actual pixel.
             output reg [9:0] y_px,          // Y position for actual pixel.
+            output reg [9:0] hc,            // horizontal counter
+            output reg [9:0] vc,            // vertical counter
             output wire      activevideo
          );
 
@@ -45,8 +47,8 @@ module VGAsyncGen (
     parameter vlines = blackV + activeVvideo;   // Total lines.
 
     // Registers for storing the horizontal & vertical counters.
-    reg [9:0] hc;
-    reg [9:0] vc;
+    //reg [9:0] hc;
+    //reg [9:0] vc;
 
     // Initial values.
     initial

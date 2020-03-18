@@ -63,10 +63,12 @@ module top (
 //--------------------
     wire [9:0] x_px; // current X position of the pixel
     wire [9:0] y_px; // current Y position of the pixel
+    wire [9:0] hc;
+    wire [9:0] vc;
     //wire px_clk;
     wire activevideo; 
 
-    VGAsyncGen vga_inst( .clk(clk), .hsync(HS), .vsync(VS), .x_px(x_px), .y_px(y_px), .activevideo(activevideo));
+    VGAsyncGen vga_inst( .clk(clk), .hsync(HS), .vsync(VS), .x_px(x_px), .y_px(y_px), .hc(hc), .vc(vc), .activevideo(activevideo));
 
     //Internal registers for current pixel color
     reg [3:0] R_int = 4'b0000;
@@ -99,9 +101,15 @@ module top (
 
     wire [6:0] current_col;
     wire [4:0] current_row;
+    wire [9:0] hmem;
+    wire [9:0] vmem;
+    // register must be loaded 2 cycles before access, so we adjust the addr to be 2 px ahead
+    // x_px and y_px are 0 when !activevideo, so we need to adjust the vertical pixel to for the first character
+    assign hmem = (hc >= 798) ? hc - 160 : (hc >= 158) ? hc + 2 - 160 : 0; // 798 = hpixels - 2, 160 = blackH, 158 = blackH - 2
+    assign vmem = (hc == 158 || hc == 159 || hc == 160) ? vc - 45 : y_px; // 45 = blackV
 
-    assign current_col = x_px[9:3]; // column of the current tile
-    assign current_row = y_px[9:4]; // row of the current tile
+    assign current_col = hmem[9:3]; // column of the current tile
+    assign current_row = vmem[9:4]; // row of the current tile
     //x_img and y_img are used to index within the look up
     wire [2:0] x_img; 
     wire [3:0] y_img;
