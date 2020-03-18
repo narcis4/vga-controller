@@ -62,41 +62,43 @@ module buffer
     input wire [addr_width-6:0] col_r, // column of tile to read
     input wire [addr_width-8:0] row_r, // row of tile to read
     input wire [data_width-1:0] din,   // data to write
+    //input wire [7:0] dataRX,           // uart data received
+    //input wire WR_RX,                  // 1 when dataRX valid, 0 otherwise
     output reg [data_width-1:0] dout   // data read
 );
 
-reg [data_width-1:0] bmem [0:num_tiles-1]; // memory of the current frame
+    reg [data_width-1:0] bmem [0:num_tiles-1]; // memory of the current frame
 
-// memory initialization
-integer i,j;
-initial begin
-    for (i=0; i<v_tiles;i=i+1) begin
-        for (j=0; j<h_tiles;j=j+1) begin
-            if (i == j) begin
-                case (i)
-                    0: bmem[i*h_tiles+j]=7'd48; // ASCII code, 0 to 9 in the diagonal test
-                    1: bmem[i*h_tiles+j]=7'd49;
-                    2: bmem[i*h_tiles+j]=7'd50;
-                    3: bmem[i*h_tiles+j]=7'd51;
-                    4: bmem[i*h_tiles+j]=7'd52;
-                    5: bmem[i*h_tiles+j]=7'd53;
-                    6: bmem[i*h_tiles+j]=7'd54;
-                    7: bmem[i*h_tiles+j]=7'd55;
-                    8: bmem[i*h_tiles+j]=7'd56;
-                    9: bmem[i*h_tiles+j]=7'd57;
-                endcase
+    // memory initialization
+    integer i,j;
+    initial begin
+        for (i=0; i<v_tiles;i=i+1) begin
+            for (j=0; j<h_tiles;j=j+1) begin
+                if (i == j) begin
+                    case (i)
+                        0: bmem[i*h_tiles+j]=7'd48; // ASCII code, 0 to 9 in the diagonal test
+                        1: bmem[i*h_tiles+j]=7'd49;
+                        2: bmem[i*h_tiles+j]=7'd50;
+                        3: bmem[i*h_tiles+j]=7'd51;
+                        4: bmem[i*h_tiles+j]=7'd52;
+                        5: bmem[i*h_tiles+j]=7'd53;
+                        6: bmem[i*h_tiles+j]=7'd54;
+                        7: bmem[i*h_tiles+j]=7'd55;
+                        8: bmem[i*h_tiles+j]=7'd56;
+                        9: bmem[i*h_tiles+j]=7'd57;
+                    endcase
+                end
+                else bmem[i*h_tiles+j]=7'd00;
             end
-            else bmem[i*h_tiles+j]=7'd00;
         end
     end
-end
 
-always @(posedge clk)
-begin
-    dout <= bmem[row_r * h_tiles + col_r]; // Output register controlled by clock.
-    if (wr_en) begin
-        bmem[row_w * h_tiles + col_w] <= din; // Write to tile
+    always @(posedge clk)
+    begin
+        dout <= bmem[row_r * h_tiles + col_r]; // Output register controlled by clock.
+        if (wr_en) begin
+            bmem[row_w * h_tiles + col_w] <= din; // Write to tile
+        end
     end
-end
 
 endmodule
