@@ -10,11 +10,10 @@ module buffer_tb;
     reg [4:0] row_r;
     reg [6:0] din;  
 
-  /* Make a reset that pulses once. */
     initial begin
         $dumpfile("buffer_tb.vcd");
         $dumpvars(0, buffer_tb);
-        wait(row_r == 5'd29 && col_r == 7'd79); // last tile
+        wait(row_r == 5'd29 && col_r == 7'd79); // last tile, bottom right
         $finish;
     end
 
@@ -30,6 +29,7 @@ module buffer_tb;
         
     buffer buf_inst( .clk(clk), .wr_en(wr_en), .col_w(col_w), .row_w(row_w), .col_r(col_r), .row_r(row_r), .din(din));
 
+    // this test reads every tile starting from top left and writes all the tiles starting from bottom right with increasing numers starting from 1
     always @(posedge clk) begin
         col_r <= col_r + 1;
         if (col_r == 7'd80) begin

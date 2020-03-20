@@ -1,25 +1,91 @@
-`timescale 1ns/1ns
+`timescale 1us/10ns
 
 module top_tb;
 
     reg clk;
+    reg rx;
     
-
-  /* Make a reset that pulses once. */
     initial begin
         $dumpfile("top_tb.vcd");
         $dumpvars(0, top_tb);
-        #1000000 $finish;
+        #10000 $finish;
     end
-
+    
+    // this test sends data to print 2 characters, a '2' in column 17 row 29, and a '9' in column 79 row 0
     initial begin
         clk = 1'b0;
+        // send column 17
+        rx = 1'b0;         // start bit
+        #8.68 rx = 1'b1;   // data bits
+        #8.68 rx = 1'b0;
+        #8.68 rx = 1'b0;
+        #8.68 rx = 1'b0;
+        #8.68 rx = 1'b1;
+        #8.68 rx = 1'b0;
+        #8.68 rx = 1'b0;
+        #8.68 rx = 1'b0;
+        #8.68 rx = 1'b1;   // stop bit
+        // send row 29
+        #8.68 rx = 1'b0;
+        #8.68 rx = 1'b1;
+        #8.68 rx = 1'b0;
+        #8.68 rx = 1'b1;
+        #8.68 rx = 1'b1;
+        #8.68 rx = 1'b1;
+        #8.68 rx = 1'b0;
+        #8.68 rx = 1'b0;
+        #8.68 rx = 1'b0;
+        #8.68 rx = 1'b1;
+        // send ASCII 50 (character '2')
+        #8.68 rx = 1'b0;
+        #8.68 rx = 1'b0;
+        #8.68 rx = 1'b1;
+        #8.68 rx = 1'b0;
+        #8.68 rx = 1'b0;
+        #8.68 rx = 1'b1;
+        #8.68 rx = 1'b1;
+        #8.68 rx = 1'b0;
+        #8.68 rx = 1'b0;
+        #8.68 rx = 1'b1;
+        // send column 79
+        #8.68 rx = 1'b0;
+        #8.68 rx = 1'b1;
+        #8.68 rx = 1'b1;
+        #8.68 rx = 1'b1;
+        #8.68 rx = 1'b1;
+        #8.68 rx = 1'b0;
+        #8.68 rx = 1'b0;
+        #8.68 rx = 1'b1;
+        #8.68 rx = 1'b0;
+        #8.68 rx = 1'b1;
+        // send row 0
+        #8.68 rx = 1'b0;
+        #8.68 rx = 1'b0;
+        #8.68 rx = 1'b0;
+        #8.68 rx = 1'b0;
+        #8.68 rx = 1'b0;
+        #8.68 rx = 1'b0;
+        #8.68 rx = 1'b0;
+        #8.68 rx = 1'b0;
+        #8.68 rx = 1'b0;
+        #8.68 rx = 1'b1;
+        // send ASCII 57 (character '9')
+        #8.68 rx = 1'b0;
+        #8.68 rx = 1'b1;
+        #8.68 rx = 1'b0;
+        #8.68 rx = 1'b0;
+        #8.68 rx = 1'b1;
+        #8.68 rx = 1'b1;
+        #8.68 rx = 1'b1;
+        #8.68 rx = 1'b0;
+        #8.68 rx = 1'b0;
+        #8.68 rx = 1'b1;
     end
         
-    top top_inst( .clk(clk));
+    top top_inst( .clk(clk), .rx(rx));
 
     /* Make a regular pulsing clock. */
-    always #20 clk = !clk;
+    always #0.02 clk = !clk;
 
 endmodule // test
 
