@@ -1,12 +1,13 @@
+// Generation of the VGA sync signals, the position of the current pixel and the horizontal and vertical counters of the screen
 module VGAsyncGen (
-            input wire       clk,           // Input clock: 25MHz
-            output wire      hsync,         // Horizontal sync out
-            output wire      vsync,         // Vertical sync out
-            output reg [9:0] x_px,          // X position for actual pixel
-            output reg [9:0] y_px,          // Y position for actual pixel
-            output reg [9:0] hc,            // horizontal counter
-            output reg [9:0] vc,            // vertical counter
-            output wire      activevideo    // 1 if we are in the display zone, 0 otherwise (sync and porches)
+            input wire       clk_i,           // Input clock: 25MHz
+            output wire      hsync_o,         // Horizontal sync out
+            output wire      vsync_o,         // Vertical sync out
+            output reg [9:0] x_px_o,          // X position for actual pixel
+            output reg [9:0] y_px_o,          // Y position for actual pixel
+            output reg [9:0] hc_o,            // horizontal counter
+            output reg [9:0] vc_o,            // vertical counter
+            output wire      activevideo_o    // 1 if we are in the display zone, 0 otherwise (sync and porches)
          );
 
     // Video structure constants for 640x480@60Hz
@@ -26,51 +27,51 @@ module VGAsyncGen (
     // Initial values.
     initial
     begin
-      x_px <= 0;
-      y_px <= 0;
-      hc <= 0;
-      vc <= 0;
+      x_px_o <= 0;
+      y_px_o <= 0;
+      hc_o <= 0;
+      vc_o <= 0;
     end
 
-    // Counting pixels.
-    always @(posedge clk)
+    // Update counters
+    always @(posedge clk_i)
     begin
         // Keep counting until the end of the line.
-        if (hc < H_PIXELS - 1)
-            hc <= hc + 1;
+        if (hc_o < H_PIXELS - 1)
+            hc_o <= hc_o + 1;
         else
         // When we hit the end of the line, reset the horizontal
         // counter and increment the vertical counter.
         // If vertical counter is at the end of the frame, then
         // reset that one too.
         begin
-            hc <= 0;
-            if (vc < V_LINES - 1)
-            vc <= vc + 1;
+            hc_o <= 0;
+            if (vc_o < V_LINES - 1)
+            vc_o <= vc_o + 1;
         else
-           vc <= 0;
+           vc_o <= 0;
         end
      end
 
     // Generate sync pulses (active low) and active video.
-    assign hsync = (hc >= HFP && hc < HFP + H_PULSE) ? 0:1;
-    assign vsync = (vc >= VFP && vc < VFP + V_PULSE) ? 0:1;
-    assign activevideo = (hc >= BLACK_H && vc >= BLACK_V) ? 1:0;
+    assign hsync_o = (hc_o >= HFP && hc_o < HFP + H_PULSE) ? 0:1;
+    assign vsync_o = (vc_o >= VFP && vc_o < VFP + V_PULSE) ? 0:1;
+    assign activevideo_o = (hc_o >= BLACK_H && vc_o >= BLACK_V) ? 1:0;
 
-    // Generate color.
-    always @(posedge clk)
+    // Track current pixel position
+    always @(posedge clk_i)
     begin
         // First check if we are within vertical active video range.
-        if (activevideo)
+        if (activevideo_o)
         begin
-            x_px <= hc - BLACK_H;
-            y_px <= vc - BLACK_V;
+            x_px_o <= hc_o - BLACK_H;
+            y_px_o <= vc_o - BLACK_V;
         end
         else
         // We are outside active video range so display black.
         begin
-            x_px <= 0;
-            y_px <= 0;
+            x_px_o <= 0;
+            y_px_o <= 0;
         end
      end
  endmodule

@@ -82,7 +82,7 @@ module top_tb;
         #8.68 rx = 1'b1;
     end
         
-    top top_inst( .clk(clk), .rx(rx));
+    top dut_top( .clk_i(clk), .rx_i(rx));
 
     /* Make a regular pulsing clock. */
     always #0.02 clk = !clk;

@@ -27,7 +27,7 @@ module buffer_tb;
         #10 wr_en = 1'b1;
     end
         
-    buffer buf_inst( .clk(clk), .wr_en(wr_en), .col_w(col_w), .row_w(row_w), .col_r(col_r), .row_r(row_r), .din(din));
+    buffer dut_buffer( .clk_i(clk), .wr_en_i(wr_en), .col_w_i(col_w), .row_w_i(row_w), .col_r_i(col_r), .row_r_i(row_r), .din_i(din));
 
     // this test reads every tile starting from top left and writes all the tiles starting from bottom right with increasing numers starting from 1
     always @(posedge clk) begin

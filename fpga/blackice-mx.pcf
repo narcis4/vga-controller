@@ -1,5 +1,5 @@
 # 25Mhz clock
-set_io clk 60
+set_io clk_i 60
 
 #pmod 1
 set_io PMOD[0] 38 # P8, B57
@@ -26,5 +26,5 @@ set_io PMOD[14] 10 # P30, 5b
 set_io PMOD[15] 9 # P31, 5a
 
 #UART
-set_io rx 61
+set_io rx_i 61
 #set_io tx 62

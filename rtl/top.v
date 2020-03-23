@@ -1,9 +1,9 @@
 // Top module, instantiates and wires other modules, defines background and character color, adjusts current pixel positions
 // and processes data from uart
 module top (
-    input wire clk,	          // 25MHz clock input
+    input wire clk_i,	          // 25MHz clock input
     //input wire RSTN_BUTTON, // rstn,
-    input wire rx,            // Tx from the computer
+    input wire rx_i,            // Tx from the computer
     output wire [15:0] PMOD   // VGA PMOD
   );
 
@@ -11,14 +11,23 @@ module top (
 //Local parameters
 //--------------------
     // V for Video output resolution
-    localparam Vwidth=640;
-    localparam Vheight=480;
+    localparam V_WIDTH=640;
+    localparam V_HEIGHT=480;
     // C for Character resolution
-    localparam Cwidth=8;
-    localparam Cheight=16;
+    localparam C_WIDTH=8;
+    localparam C_HEIGHT=16;
     // Number of columns and rows
-    localparam Ncol=Vwidth/Cwidth;
-    localparam Nrow=Vheight/Cheight; 
+    localparam N_COL=V_WIDTH/C_WIDTH;
+    localparam N_ROW=V_HEIGHT/C_HEIGHT;
+    
+    localparam N_PIXEL_WIDTH = 10;
+    localparam UART_DATA_WIDTH = 8;
+    localparam COLOR_WIDTH = 4;
+    localparam COLOR_0 = 4'b0000; // black background
+    localparam COLOR_1 = 4'b1111; // white characters
+    localparam N_ROW_WIDTH = 5;
+    localparam N_COL_WIDTH = 7;
+    localparam N_CHARS_WIDTH = 7;
 
 //--------------------
 //IO pins assigments
@@ -60,31 +69,31 @@ module top (
 //--------------------
 // IP internal signals
 //--------------------
-    wire [9:0] x_px;  // current X position of the pixel
-    wire [9:0] y_px;  // current Y position of the pixel
-    wire [9:0] hc;    // horizontal counter
-    wire [9:0] vc;    // vertical counter
+    wire [N_PIXEL_WIDTH-1:0] x_px;  // current X position of the pixel
+    wire [N_PIXEL_WIDTH-1:0] y_px;  // current Y position of the pixel
+    wire [N_PIXEL_WIDTH-1:0] hc;    // horizontal counter
+    wire [N_PIXEL_WIDTH-1:0] vc;    // vertical counter
     wire activevideo; // 1 if displaying pixels, 0 otherwise
 
-    VGAsyncGen vga_inst( .clk(clk), .hsync(HS), .vsync(VS), .x_px(x_px), .y_px(y_px), .hc(hc), .vc(vc), .activevideo(activevideo));
+    VGAsyncGen vga_inst( .clk_i(clk_i), .hsync_o(HS), .vsync_o(VS), .x_px_o(x_px), .y_px_o(y_px), .hc_o(hc), .vc_o(vc), .activevideo_o(activevideo));
 
-    wire [7:0] dataRX; // data recieved from uart
+    wire [UART_DATA_WIDTH-1:0] dataRX; // data received from uart
     wire WR_RX;        // uart valid data
 
     uart #(.baudRate(115200), .if_parity(1'b0))
-		reciver (
-			.clk(clk), 		//Input	
-			//.rst(RSTN2), 	    	//Input	
-			.uart_rx(rx),		//Input
-			.o_wr(WR_RX), 		//Output
-			.o_data(dataRX)		//Output
+		uart_inst (
+			.clk_i(clk_i), 		
+			//.rst(RSTN2), 	    	
+			.uart_rx_i(rx_i),		
+			.wr_o(WR_RX), 	
+			.data_o(dataRX)		
 	);
 
     //Internal registers for current pixel color
-    reg [3:0] R_int = 4'b0000;
-    reg [3:0] G_int = 4'b0000;
-    reg [3:0] B_int = 4'b0000;
-    //RGB values assigment from pixel color register
+    reg [COLOR_WIDTH-1:0] R_int = 4'b0000;
+    reg [COLOR_WIDTH-1:0] G_int = 4'b0000;
+    reg [COLOR_WIDTH-1:0] B_int = 4'b0000;
+    //RGB values assigment from pixel color register or black if we are not in display zone
     assign R0 = activevideo ? R_int[0] :0; 
     assign R1 = activevideo ? R_int[1] :0; 
     assign R2 = activevideo ? R_int[2] :0; 
@@ -100,19 +109,16 @@ module top (
     
     //Track current column and row
     `ifdef ASSERTIONS
-        assert Cwidth == 8;
-        assert Cheight == 16;
+        assert C_WIDTH == 8;
+        assert C_HEIGHT == 16;
         //if that assertions fail current_col current_row range need to change
         //along other parameters as the lookup and pixel within image
     `endif
 
-    localparam Color0 = 4'b0000; // black background
-    localparam Color1 = 4'b1111; // white characters
-
-    wire [6:0] current_col; // column of the current tile
-    wire [4:0] current_row; // row of the current tile
-    wire [9:0] hmem; // adjusted current x position of the pixel
-    wire [9:0] vmem; // adjusted current y position of the pixel
+    wire [N_COL_WIDTH-1:0] current_col; // column of the current tile
+    wire [N_ROW_WIDTH-1:0] current_row; // row of the current tile
+    wire [N_PIXEL_WIDTH-1:0] hmem; // adjusted current x position of the pixel
+    wire [N_PIXEL_WIDTH-1:0] vmem; // adjusted current y position of the pixel
     // register must be loaded 2 cycles before access, so we adjust the addr to be 2 px ahead
     assign hmem = (hc >= 798) ? hc - 160 : (hc >= 158) ? hc + 2 - 160 : 0; // 798 = hpixels - 2, 160 = blackH, 158 = blackH - 2
     // x_px and y_px are 0 when !activevideo, so we need to adjust the vertical pixel to for the first character
@@ -127,14 +133,14 @@ module top (
     assign y_img = y_px[3:0]; 
 
     reg wr_en;                      // screen buffer write enable
-    reg [6:0] col_w;                // column of the tile to write
-    reg [4:0] row_w;                // row of the tile to write
-    reg [6:0] din;                  // data input, ASCII code
+    reg [N_COL_WIDTH-1:0] col_w;    // column of the tile to write
+    reg [N_ROW_WIDTH-1:0] row_w;    // row of the tile to write
+    reg [N_CHARS_WIDTH-1:0] din;    // data input, ASCII code
     reg wr_rx1 = 1'b0;              // WR_RX one cycle delayed
-    reg [1:0] data_counter = 2'b00; // indicates what will the next data recieved by the uart mean
+    reg [1:0] data_counter = 2'b00; // indicates what will the next data received by the uart mean
 
     // Read data from the uart following the sequence: column -> row -> data -> end line (ignore)
-    always @(posedge clk) begin
+    always @(posedge clk_i) begin
         wr_en <= 1'b0;
         if (!wr_rx1 && WR_RX) begin // WR_RX rising edge
             case (data_counter)
@@ -154,15 +160,15 @@ module top (
         wr_rx1 <= WR_RX;
     end
 
-    wire [6:0] char_addr; // address of the char in the bitmap, ASCII code
-    wire [0:Cwidth*Cheight-1] char; // bitmap of 1 character
+    wire [N_CHARS_WIDTH-1:0] char_addr; // address of the char in the bitmap, ASCII code
+    wire [0:C_WIDTH*C_HEIGHT-1] char; // bitmap of 1 character
     
-    buffer buf_inst( .clk(clk), .wr_en(wr_en), .col_w(col_w), .row_w(row_w), .col_r(current_col), .row_r(current_row), .din(din), .dout(char_addr));
-    fontMem fmem_inst( .clk(clk), .addr(char_addr), .dout(char));
+    buffer buf_inst( .clk_i(clk_i), .wr_en_i(wr_en), .col_w_i(col_w), .row_w_i(row_w), .col_r_i(current_col), .row_r_i(current_row), .din_i(din), .dout_o(char_addr));
+    fontMem fmem_inst( .clk_i(clk_i), .addr_i(char_addr), .dout_o(char));
 
     //Update next pixel color
-    //always @(posedge clk, negedge rstn) begin
-    always @(posedge clk) begin
+    //always @(posedge clk_i, negedge rstn) begin
+    always @(posedge clk_i) begin
         //if (!rstn) begin
                 //R_int <= 4'b0;
                 //G_int <= 4'b0;
@@ -173,9 +179,9 @@ module top (
         //if We don't use the active video pixel value will increase in the 
         //section outside the display as well.
         if (activevideo) begin
-                R_int <= char[y_img*Cwidth+x_img] ? Color1 : Color0; // paint white if pixel from the bitmap is active, black otherwise
-                G_int <= char[y_img*Cwidth+x_img] ? Color1 : Color0; 
-                B_int <= char[y_img*Cwidth+x_img] ? Color1 : Color0; 
+                R_int <= char[y_img*C_WIDTH+x_img] ? COLOR_1 : COLOR_0; // paint white if pixel from the bitmap is active, black otherwise
+                G_int <= char[y_img*C_WIDTH+x_img] ? COLOR_1 : COLOR_0; 
+                B_int <= char[y_img*C_WIDTH+x_img] ? COLOR_1 : COLOR_0; 
         end
     end
 

@@ -17,7 +17,7 @@ module fontMem_tb;
         addr = 7'd0;
     end
         
-    fontMem fmem_inst( .clk(clk), .addr(addr));
+    fontMem dut_fontMem( .clk_i(clk), .addr_i(addr));
 
     // this test reads all memory positions starting from 0
     always @(posedge clk) begin

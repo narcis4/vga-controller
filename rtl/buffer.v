@@ -8,14 +8,14 @@ module buffer
     parameter DATA_WIDTH = 7               // log2(128 possible characters)
 )
 (
-    input wire                  clk,   // 25 MHz clock
-    input wire                  wr_en, // write enable for the data input
-    input wire [ADDR_WIDTH-6:0] col_w, // column of tile to write
-    input wire [ADDR_WIDTH-8:0] row_w, // row of tile to write
-    input wire [ADDR_WIDTH-6:0] col_r, // column of tile to read
-    input wire [ADDR_WIDTH-8:0] row_r, // row of tile to read
-    input wire [DATA_WIDTH-1:0] din,   // data input, the ASCII code of the character
-    output reg [DATA_WIDTH-1:0] dout   // data output
+    input wire                  clk_i,   // 25 MHz clock
+    input wire                  wr_en_i, // write enable for the data input
+    input wire [ADDR_WIDTH-6:0] col_w_i, // column of tile to write
+    input wire [ADDR_WIDTH-8:0] row_w_i, // row of tile to write
+    input wire [ADDR_WIDTH-6:0] col_r_i, // column of tile to read
+    input wire [ADDR_WIDTH-8:0] row_r_i, // row of tile to read
+    input wire [DATA_WIDTH-1:0] din_i,   // data input, the ASCII code of the character
+    output reg [DATA_WIDTH-1:0] dout_o   // data output
 );
 
     reg [DATA_WIDTH-1:0] bmem [0:NUM_TILES-1]; // memory of the current frame
@@ -31,11 +31,11 @@ module buffer
     end
 
     // read and write operation
-    always @(posedge clk)
+    always @(posedge clk_i)
     begin
-        dout <= bmem[row_r * H_TILES + col_r]; 
-        if (wr_en) begin
-            bmem[row_w * H_TILES + col_w] <= din;
+        dout_o <= bmem[row_r_i * H_TILES + col_r_i]; 
+        if (wr_en_i) begin
+            bmem[row_w_i * H_TILES + col_w_i] <= din_i;
         end
     end
 

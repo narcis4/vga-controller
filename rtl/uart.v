@@ -1,17 +1,19 @@
-// Uart reciever
+// Uart receiver
 module uart(
-	input	wire        clk,
-	input	wire        uart_rx,
+	input	wire        clk_i,     // 25MHz clock
+	input	wire        uart_rx_i, // bit received from the uart
 	//input   wire rst,
-	output	reg	        o_wr,
-    output	wire [7:0]	o_data
+	output	reg	        wr_o,    // 1 when data_o is valid, 0 otherwise
+    output	wire [7:0]	data_o   // data received from the uart
 );
 
 
-    localparam clk_frequency = 25e6; //25 MHz
-    parameter baudRate = 115200;
-    parameter if_parity = 0; // 0 no parity, 1 parity even
-    localparam [15:0] clocksPerBaud = clk_frequency/baudRate;
+    localparam clk_frequency = 25e6;
+    parameter baudRate = 115200; 
+    parameter if_parity = 0; // 0 no parity bit, 1 otherwise
+    localparam BAUD_WIDTH = 16;
+    localparam DATA_WIDTH = 8;
+    localparam [BAUD_WIDTH-1:0] clocksPerBaud = clk_frequency/baudRate;
 
     //STATES
     localparam [2:0] IDLE   = 3'b000;
@@ -22,13 +24,13 @@ module uart(
 
 
 
-    reg  [2:0]  state = IDLE;
-    reg  [2:0]  next_state;
-    reg  [15:0] baudSync = 0;
-    wire [15:0] next_baudSync;
-    reg  [2:0]  dataCounter = 0;
-    reg  [7:0]  data = 0;
-    reg  [7:0]  next_data;
+    reg  [2:0]  state = IDLE;    // current transmission state
+    reg  [2:0]  next_state;      // next transmission state
+    reg  [BAUD_WIDTH-1:0] baudSync = 0;    // counter to know when to move to the next state, every baud cycle
+    wire [BAUD_WIDTH-1:0] next_baudSync;   // baudsync for the next clock edge
+    reg  [2:0]  dataCounter = 0; // counter to know when the data ends
+    reg  [DATA_WIDTH-1:0]  data = 0;        // current data received
+    reg  [DATA_WIDTH-1:0]  next_data;       // data for the next clock edge
 
 
 
@@ -36,20 +38,21 @@ module uart(
     reg rx  = 1; 
     reg rx1 = 1;
 
-    always @(posedge clk) begin
+    always @(posedge clk_i) begin
 	    //if (!rst) begin
 		    //rx <= 0;
 		    //rx1 <= 0;
 	    //end
 	    //else
-		    {rx, rx1} <= {rx1, uart_rx};
+		    {rx, rx1} <= {rx1, uart_rx_i};
     end
 
 
     // Baud counter, Data counter and states
     assign next_baudSync = (state == IDLE) ? 0 : (baudSync == clocksPerBaud-1) ? 0 : baudSync + 1;
 
-    always @(posedge clk) begin
+    // Update registers
+    always @(posedge clk_i) begin
 	    //if (!rst)  begin
 		    //baudSync <= 0;
 		    //dataCounter <= 0;
@@ -67,9 +70,9 @@ module uart(
 
 
 
-    //State machine
+    //State machine control and output
     always @(state or baudSync or dataCounter or rx or data) begin
-	    o_wr = 0;
+	    wr_o = 0;
 	    next_state = state;
 	    next_data = data;
 	    case (state)
@@ -94,7 +97,7 @@ module uart(
 				    next_state = STOP;
 			    end
 		    STOP: begin
-			    o_wr = 1;
+			    wr_o = 1;
 			    if (baudSync == clocksPerBaud/2-1)
 				    next_state = IDLE;
 			    end
@@ -102,7 +105,7 @@ module uart(
     end
 
 
-    assign o_data = data;
+    assign data_o = data;
 
 endmodule
 
