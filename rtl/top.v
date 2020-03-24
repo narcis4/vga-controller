@@ -129,7 +129,7 @@ module top (
     //x_img and y_img are used to index within the look up
     wire [2:0] x_img; // indicate X position inside the tile (0-7)
     wire [3:0] y_img; // inidicate Y position inside the tile (0-15)
-    assign x_img = x_px[2:0]; 
+    assign x_img = x_px[2:0] + 1; // same as hmem, we need to load the pixel 1 cycle earlier, so we adjust the fetch to be 1 ahead
     assign y_img = y_px[3:0]; 
 
     reg wr_en;                      // screen buffer write enable

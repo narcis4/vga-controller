@@ -56,7 +56,7 @@ module VGAsyncGen (
     // Generate sync pulses (active low) and active video.
     assign hsync_o = (hc_o >= HFP && hc_o < HFP + H_PULSE) ? 0:1;
     assign vsync_o = (vc_o >= VFP && vc_o < VFP + V_PULSE) ? 0:1;
-    assign activevideo_o = (hc_o >= BLACK_H && vc_o >= BLACK_V) ? 1:0;
+    assign activevideo_o = (hc_o >= BLACK_H -1 && vc_o >= BLACK_V) ? 1:0; // we generate activevideo 1 pixel before horizontally due to register delay (see top.v)
 
     // Track current pixel position
     always @(posedge clk_i)
