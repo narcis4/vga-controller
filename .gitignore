@@ -1,2 +1,4 @@
 /bin
 *.vcd
+/rtl/database
+/rtl/tasks

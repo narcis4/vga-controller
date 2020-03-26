@@ -54,96 +54,96 @@ module top_tb;
         #10000 wait(pmod[7:0] == 8'hFF);
         // next pixel of the character 'A' is at next line -1, so (800 horizontal cycles -1)*0.04 clk = 31.96, add 0.01 to have time to change output
         #31.97 if (pmod[7:0] != 8'hFF) begin
-            $display("Error 1");
+            $display("ERROR 1");
             error = 1'b1;
         end
         // next pixel is 2 away
         #0.08 if (pmod[7:0] != 8'hFF) begin
-            $display("Error 2");
+            $display("ERROR 2");
             error = 1'b1;
         end
         #31.92 if (pmod[7:0] != 8'hFF) begin
-            $display("Error 3");
+            $display("ERROR 3");
             error = 1'b1;
         end
         #0.08 if (pmod[7:0] != 8'hFF) begin
-            $display("Error 4");
+            $display("ERROR 4");
             error = 1'b1;
         end
         #31.92 if (pmod[7:0] != 8'hFF) begin
-            $display("Error 5");
+            $display("ERROR 5");
             error = 1'b1;
         end
         #0.08 if (pmod[7:0] != 8'hFF) begin
-            $display("Error 6");
+            $display("ERROR 6");
             error = 1'b1;
         end
         #31.88 if (pmod[7:0] != 8'hFF) begin
-            $display("Error 7");
+            $display("ERROR 7");
             error = 1'b1;
         end
         #0.16 if (pmod[7:0] != 8'hFF) begin
-            $display("Error 8");
+            $display("ERROR 8");
             error = 1'b1;
         end
         #31.84 if (pmod[7:0] != 8'hFF) begin
-            $display("Error 9");
+            $display("ERROR 9");
             error = 1'b1;
         end
         #0.04 if (pmod[7:0] != 8'hFF) begin
-            $display("Error 10");
+            $display("ERROR 10");
             error = 1'b1;
         end
         #0.04 if (pmod[7:0] != 8'hFF) begin
-            $display("Error 11");
+            $display("ERROR 11");
             error = 1'b1;
         end
         #0.04 if (pmod[7:0] != 8'hFF) begin
-            $display("Error 12");
+            $display("ERROR 12");
             error = 1'b1;
         end
         #0.04 if (pmod[7:0] != 8'hFF) begin
-            $display("Error 13");
+            $display("ERROR 13");
             error = 1'b1;
         end
         #31.84 if (pmod[7:0] != 8'hFF) begin
-            $display("Error 14");
+            $display("ERROR 14");
             error = 1'b1;
         end
         #0.16 if (pmod[7:0] != 8'hFF) begin
-            $display("Error 15");
+            $display("ERROR 15");
             error = 1'b1;
         end
         #31.84 if (pmod[7:0] != 8'hFF) begin
-            $display("Error 16");
+            $display("ERROR 16");
             error = 1'b1;
         end
         #0.16 if (pmod[7:0] != 8'hFF) begin
-            $display("Error 17");
+            $display("ERROR 17");
             error = 1'b1;
         end
         #31.80 if (pmod[7:0] != 8'hFF) begin
-            $display("Error 18");
+            $display("ERROR 18");
             error = 1'b1;
         end
         #0.24 if (pmod[7:0] != 8'hFF) begin
-            $display("Error 19");
+            $display("ERROR 19");
             error = 1'b1;
         end
         #31.76 if (pmod[7:0] != 8'hFF) begin
-            $display("Error 20");
+            $display("ERROR 20");
             error = 1'b1;
         end
         #0.24 if (pmod[7:0] != 8'hFF) begin
-            $display("Error 21");
+            $display("ERROR 21");
             error = 1'b1;
         end
         #31.76 if (pmod[7:0] != 8'hFF) begin
-            $display("Error 22");
+            $display("ERROR 22");
             error = 1'b1;
         end
         #0.24 if (pmod[7:0] != 8'hFF) begin
-            $display("Error 23");
+            $display("ERROR 23");
             error = 1'b1;
         end
         if (error == 1'b0) $display("PASS");

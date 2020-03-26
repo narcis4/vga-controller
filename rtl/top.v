@@ -120,8 +120,8 @@ module top (
     wire [N_PIXEL_WIDTH-1:0] hmem; // adjusted current x position of the pixel
     wire [N_PIXEL_WIDTH-1:0] vmem; // adjusted current y position of the pixel
     // register must be loaded 2 cycles before access, so we adjust the addr to be 2 px ahead
-    assign hmem = (hc >= 798) ? hc - 160 : (hc >= 158) ? hc + 2 - 160 : 0; // 798 = hpixels - 2, 160 = blackH, 158 = blackH - 2
-    // x_px and y_px are 0 when !activevideo, so we need to adjust the vertical pixel to for the first character
+    assign hmem = (hc >= 799) ? hc - 160 : (hc >= 158) ? hc + 2 - 160 : 0; // 798 = hpixels - 2, 160 = blackH, 158 = blackH - 2
+    // x_px and y_px are 0 when !activevideo, so we need to adjust the vertical pixel too for the first character
     assign vmem = (hc == 158 || hc == 159 || hc == 160) ? vc - 45 : y_px; // 45 = blackV
 
     assign current_col = hmem[9:3]; 
@@ -129,7 +129,7 @@ module top (
     //x_img and y_img are used to index within the look up
     wire [2:0] x_img; // indicate X position inside the tile (0-7)
     wire [3:0] y_img; // inidicate Y position inside the tile (0-15)
-    assign x_img = x_px[2:0] + 1; // same as hmem, we need to load the pixel 1 cycle earlier, so we adjust the fetch to be 1 ahead
+    assign x_img = x_px[2:0] + 1; // similar as hmem, we need to load the pixel 1 cycle earlier, so we adjust the fetch to be 1 ahead
     assign y_img = y_px[3:0]; 
 
     reg wr_en;                      // screen buffer write enable
