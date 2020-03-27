@@ -10,7 +10,8 @@ module top_tb;
     initial begin
         $dumpfile("top_tb.vcd");
         $dumpvars(0, top_tb);
-        #50000 $finish;
+        #50000 if (error == 1'b0) $display("PASS");
+        $finish;
     end
 
     // this test sends a character 'A' to write and then checks that the corresponding pixels are white
@@ -146,7 +147,6 @@ module top_tb;
             $display("ERROR 23");
             error = 1'b1;
         end
-        if (error == 1'b0) $display("PASS");
     end
         
     top dut_top( .clk_i(clk), .rx_i(rx), .PMOD(pmod));

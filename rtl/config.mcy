@@ -1,5 +1,5 @@
 [options]
-size 100
+size 10
 tags COVERED UNCOVERED NOCHANGE FMGAP
 
 [script]
@@ -21,11 +21,11 @@ fontMem.v
 sim_okay = result("test_sim") == "PASS"
 eq_okay = result("test_eq") == "PASS"
 
-if sim_okay and not eq_okay:
+if sim_okay and not eq_okay and result("test_eq") != "TIMEOUT":
     tag("UNCOVERED")
-elif not sim_okay and not eq_okay:
+elif not sim_okay and not eq_okay and result("test_eq") != "TIMEOUT":
     tag("COVERED")
-elif sim_okay and eq_okay:
+elif (sim_okay and eq_okay) or result("test_eq") == "TIMEOUT":
     tag("NOCHANGE")
 else:
     tag("FMGAP")
@@ -37,9 +37,9 @@ if tags("COVERED")+tags("UNCOVERED"):
     print("Coverage: %.2f%%" % (100.0*tags("COVERED")/(tags("COVERED")+tags("UNCOVERED"))))
 
 [test test_sim]
-expect PASS FAIL ERROR
+expect PASS FAIL 
 run bash $PRJDIR/test_sim.sh
 
 [test test_eq]
-expect PASS FAIL
+expect TIMEOUT PASS FAIL
 run bash $PRJDIR/test_eq.sh
