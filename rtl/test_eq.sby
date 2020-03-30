@@ -1,8 +1,7 @@
 [options]
 mode bmc
-depth 400000
-expect timeout,pass,fail
-timeout 600
+depth 5000
+expect pass,fail
 
 [engines]
 smtbmc yices

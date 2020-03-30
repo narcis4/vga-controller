@@ -1,27 +1,40 @@
 module miter (
     input clk,
-	input ref_din_data,
-	input uut_din_data,
+	input wr_en,
+    input col_w,
+    input row_w,
+    input col_r,
+    input row_r,
+    input din
 );
-	wire [15:0] ref_dout_data;
-	wire [15:0] uut_dout_data;
+	wire [6:0] ref_dout;
+	wire [6:0] uut_dout;
 
-	top ref (
+	buffer ref (
 		.mutsel    (1'b 0),
         .clk_i (clk),
-		.rx_i  (ref_din_data),
-		.PMOD (ref_dout_data)
+		.wr_en_i  (wr_en),
+		.col_w_i (col_w),
+        .row_w_i (row_w),
+        .col_r_i (col_r),
+        .row_r_i (row_r),
+        .din_i (din),
+        .dout_o (ref_dout)
 	);
 
-	top uut (
+	buffer uut (
 		.mutsel    (1'b 1),
         .clk_i (clk),
-		.rx_i  (uut_din_data),
-		.PMOD (uut_dout_data)
+		.wr_en_i  (wr_en),
+		.col_w_i (col_w),
+        .row_w_i (row_w),
+        .col_r_i (col_r),
+        .row_r_i (row_r),
+        .din_i (din),
+        .dout_o (uut_dout)
 	);
 
 	always @* begin
-        assume (ref_din_data == uut_din_data);
-		assert (ref_dout_data == uut_dout_data);
+		assert (ref_dout == uut_dout);
 	end
 endmodule

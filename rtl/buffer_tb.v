@@ -39,7 +39,7 @@ module buffer_tb;
     always @(posedge clk) begin
         #1 if (write_done) begin
             if (dout != din) begin
-                $display("Error at column %d row %d dout %d din %d", col_r, row_r, dout, din);
+                $display("ERROR at column %d row %d dout %d din %d", col_r, row_r, dout, din);
                 error <= 1'b1;
             end
             din <= din - 1;

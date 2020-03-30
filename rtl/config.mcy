@@ -1,31 +1,23 @@
 [options]
-size 10
+size 500
 tags COVERED UNCOVERED NOCHANGE FMGAP
 
 [script]
-read_verilog top.v
-read_verilog VGAsyncGen.v
-read_verilog uart.v
 read_verilog buffer.v
-read_verilog fontMem.v
-prep -top top
+prep -top buffer
 
 [files]
-top.v
-VGAsyncGen.v
-uart.v
 buffer.v
-fontMem.v
 
 [logic]
 sim_okay = result("test_sim") == "PASS"
 eq_okay = result("test_eq") == "PASS"
 
-if sim_okay and not eq_okay and result("test_eq") != "TIMEOUT":
+if sim_okay and not eq_okay:
     tag("UNCOVERED")
-elif not sim_okay and not eq_okay and result("test_eq") != "TIMEOUT":
+elif not sim_okay and not eq_okay:
     tag("COVERED")
-elif (sim_okay and eq_okay) or result("test_eq") == "TIMEOUT":
+elif sim_okay and eq_okay:
     tag("NOCHANGE")
 else:
     tag("FMGAP")
@@ -41,5 +33,5 @@ expect PASS FAIL
 run bash $PRJDIR/test_sim.sh
 
 [test test_eq]
-expect TIMEOUT PASS FAIL
+expect PASS FAIL
 run bash $PRJDIR/test_eq.sh
