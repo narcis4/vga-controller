@@ -8,7 +8,7 @@ module uart(
 );
 
 
-    localparam clk_frequency = 25e6;
+    localparam clk_frequency = 65e6;
     parameter baudRate = 115200; 
     parameter if_parity = 0; // 0 no parity bit, 1 otherwise
     localparam BAUD_WIDTH = 16;

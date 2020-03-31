@@ -1,24 +1,24 @@
 // Generation of the VGA sync signals, the position of the current pixel and the horizontal and vertical counters of the screen
 module VGAsyncGen (
-            input wire       clk_i,           // Input clock: 25MHz
+            input wire       clk_i,           // Input clock: 65MHz
             output wire      hsync_o,         // Horizontal sync out
             output wire      vsync_o,         // Vertical sync out
             output reg [9:0] x_px_o,          // X position for actual pixel
             output reg [9:0] y_px_o,          // Y position for actual pixel
-            output reg [9:0] hc_o,            // horizontal counter
-            output reg [9:0] vc_o,            // vertical counter
+            output reg [10:0] hc_o,            // horizontal counter
+            output reg [10:0] vc_o,            // vertical counter
             output wire      activevideo_o    // 1 if we are in the display zone, 0 otherwise (sync and porches)
          );
 
-    // Video structure constants for 640x480@60Hz
-    parameter ACTIVE_H_VIDEO = 640;               // Width of visible pixels.
-    parameter ACTIVE_V_VIDEO =  480;              // Height of visible lines.
-    parameter HFP = 16;                         // Horizontal front porch length.
-    parameter H_PULSE = 96;                      // Hsync pulse length.
-    parameter HBP = 48;                         // Horizontal back porch length.
-    parameter VFP = 10;                         // Vertical front porch length.
-    parameter V_PULSE = 2;                       // Vsync pulse length.
-    parameter VBP = 33;                         // Vertical back porch length.
+    // Video structure constants for 1024x768@60Hz
+    parameter ACTIVE_H_VIDEO = 1024;               // Width of visible pixels.
+    parameter ACTIVE_V_VIDEO =  768;              // Height of visible lines.
+    parameter HFP = 24;                         // Horizontal front porch length.
+    parameter H_PULSE = 136;                      // Hsync pulse length.
+    parameter HBP = 160;                         // Horizontal back porch length.
+    parameter VFP = 3;                         // Vertical front porch length.
+    parameter V_PULSE = 6;                       // Vsync pulse length.
+    parameter VBP = 29;                         // Vertical back porch length.
     parameter BLACK_H = HFP + H_PULSE + HBP;      // Hide pixels in one line.
     parameter BLACK_V = VFP + V_PULSE + VBP;      // Hide lines in one frame.
     parameter H_PIXELS = BLACK_H + ACTIVE_H_VIDEO;  // Total horizontal pixels.

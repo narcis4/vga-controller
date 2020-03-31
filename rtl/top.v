@@ -11,8 +11,8 @@ module top (
 //Local parameters
 //--------------------
     // V for Video output resolution
-    localparam V_WIDTH=640;
-    localparam V_HEIGHT=480;
+    localparam V_WIDTH=1024;
+    localparam V_HEIGHT=768;
     // C for Character resolution
     localparam C_WIDTH=8;
     localparam C_HEIGHT=16;
@@ -20,17 +20,17 @@ module top (
     localparam N_COL=V_WIDTH/C_WIDTH;
     localparam N_ROW=V_HEIGHT/C_HEIGHT;
     
-    localparam N_COUNTER_WIDTH = 10;
+    localparam N_COUNTER_WIDTH = 11;
     localparam N_PIXEL_WIDTH = 10;
     localparam UART_DATA_WIDTH = 8;
     localparam COLOR_WIDTH = 4;
     localparam COLOR_0 = 4'b0000; // black background
     localparam COLOR_1 = 4'b1111; // white characters
-    localparam N_ROW_WIDTH = 5;
+    localparam N_ROW_WIDTH = 6;
     localparam N_COL_WIDTH = 7;
     localparam N_CHARS_WIDTH = 7;
-    localparam H_PIXELS = 800;
-    localparam V_PIXELS = 525;
+    localparam H_PIXELS = 1344;
+    localparam V_PIXELS = 806;
     localparam H_BLACK = H_PIXELS - V_WIDTH;
     localparam V_BLACK = V_PIXELS - V_HEIGHT;
     localparam C_ADDR_WIDTH = 3;
@@ -74,22 +74,37 @@ module top (
     assign  rstn = bf2_rstn;*/
 
 //--------------------
-// IP internal signals
+// PLL
 //--------------------
+
+    wire clk65;
+    SB_PLL40_CORE #(
+		.FEEDBACK_PATH("SIMPLE"),
+		.DIVR(4'b0001),		// DIVR =  1
+		.DIVF(7'b1010010),	// DIVF = 82
+		.DIVQ(3'b100),		// DIVQ =  4
+		.FILTER_RANGE(3'b001)	// FILTER_RANGE = 1
+	) uut (
+		.RESETB(1'b1),
+		.BYPASS(1'b0),
+		.REFERENCECLK(clk_i),
+		.PLLOUTCORE(clk65)
+		);
+    
     wire [N_PIXEL_WIDTH-1:0] x_px;  // current X position of the pixel
     wire [N_PIXEL_WIDTH-1:0] y_px;  // current Y position of the pixel
     wire [N_COUNTER_WIDTH-1:0] hc;    // horizontal counter
     wire [N_COUNTER_WIDTH-1:0] vc;    // vertical counter
     wire activevideo; // 1 if displaying pixels, 0 otherwise
 
-    VGAsyncGen vga_inst( .clk_i(clk_i), .hsync_o(HS), .vsync_o(VS), .x_px_o(x_px), .y_px_o(y_px), .hc_o(hc), .vc_o(vc), .activevideo_o(activevideo));
+    VGAsyncGen vga_inst( .clk_i(clk65), .hsync_o(HS), .vsync_o(VS), .x_px_o(x_px), .y_px_o(y_px), .hc_o(hc), .vc_o(vc), .activevideo_o(activevideo));
 
     wire [UART_DATA_WIDTH-1:0] dataRX; // data received from uart
     wire WR_RX;        // uart valid data
 
     uart #(.baudRate(115200), .if_parity(1'b0))
 		uart_inst (
-			.clk_i(clk_i), 		
+			.clk_i(clk65), 		
 			//.rst(RSTN2), 	    	
 			.uart_rx_i(rx_i),		
 			.wr_o(WR_RX), 	
@@ -147,12 +162,12 @@ module top (
     reg [1:0] data_counter = 2'b00; // indicates what will the next data received by the uart mean
 
     // Read data from the uart following the sequence: column -> row -> data -> end line (ignore)
-    always @(posedge clk_i) begin
+    always @(posedge clk65) begin
         wr_en <= 1'b0;
         if (!wr_rx1 && WR_RX) begin // WR_RX rising edge
             case (data_counter)
                 2'b00: begin
-                    if (dataRX[N_COL_WIDTH-1:0] >= 80) col_w <= dataRX[N_COL_WIDTH-1:0] - 80;
+                    if (dataRX[N_COL_WIDTH-1:0] >= N_COL) col_w <= dataRX[N_COL_WIDTH-1:0] - N_COL;
                     else col_w <= dataRX[N_COL_WIDTH-1:0];
                 end
                 2'b01: row_w <= dataRX[N_ROW_WIDTH-1:0];
@@ -170,12 +185,12 @@ module top (
     wire [N_CHARS_WIDTH-1:0] char_addr; // address of the char in the bitmap, ASCII code
     wire [0:C_WIDTH*C_HEIGHT-1] char; // bitmap of 1 character
     
-    buffer buf_inst( .clk_i(clk_i), .wr_en_i(wr_en), .col_w_i(col_w), .row_w_i(row_w), .col_r_i(current_col), .row_r_i(current_row), .din_i(din), .dout_o(char_addr));
-    fontMem fmem_inst( .clk_i(clk_i), .addr_i(char_addr), .dout_o(char));
+    buffer buf_inst( .clk_i(clk65), .wr_en_i(wr_en), .col_w_i(col_w), .row_w_i(row_w), .col_r_i(current_col), .row_r_i(current_row), .din_i(din), .dout_o(char_addr));
+    fontMem fmem_inst( .clk_i(clk65), .addr_i(char_addr), .dout_o(char));
 
     //Update next pixel color
-    //always @(posedge clk_i, negedge rstn) begin
-    always @(posedge clk_i) begin
+    //always @(posedge clk65, negedge rstn) begin
+    always @(posedge clk65) begin
         //if (!rstn) begin
                 //R_int <= 4'b0;
                 //G_int <= 4'b0;
