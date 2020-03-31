@@ -152,7 +152,7 @@ module top (
         if (!wr_rx1 && WR_RX) begin // WR_RX rising edge
             case (data_counter)
                 2'b00: begin
-                    if (dataRX[N_COL_WIDTH-1:0] >= 80) col_w <= dataRX[N_COL_WIDTH-1:0] - 80;
+                    if (dataRX[N_COL_WIDTH-1:0] >= N_COL) col_w <= dataRX[N_COL_WIDTH-1:0] - N_COL;
                     else col_w <= dataRX[N_COL_WIDTH-1:0];
                 end
                 2'b01: row_w <= dataRX[N_ROW_WIDTH-1:0];
