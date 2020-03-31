@@ -20,6 +20,7 @@ module top (
     localparam N_COL=V_WIDTH/C_WIDTH;
     localparam N_ROW=V_HEIGHT/C_HEIGHT;
     
+    localparam N_COUNTER_WIDTH = 10;
     localparam N_PIXEL_WIDTH = 10;
     localparam UART_DATA_WIDTH = 8;
     localparam COLOR_WIDTH = 4;
@@ -28,6 +29,12 @@ module top (
     localparam N_ROW_WIDTH = 5;
     localparam N_COL_WIDTH = 7;
     localparam N_CHARS_WIDTH = 7;
+    localparam H_PIXELS = 800;
+    localparam V_PIXELS = 525;
+    localparam H_BLACK = H_PIXELS - V_WIDTH;
+    localparam V_BLACK = V_PIXELS - V_HEIGHT;
+    localparam C_ADDR_WIDTH = 3;
+    localparam C_ADDR_HEIGHT = 4;
 
 //--------------------
 //IO pins assigments
@@ -71,8 +78,8 @@ module top (
 //--------------------
     wire [N_PIXEL_WIDTH-1:0] x_px;  // current X position of the pixel
     wire [N_PIXEL_WIDTH-1:0] y_px;  // current Y position of the pixel
-    wire [N_PIXEL_WIDTH-1:0] hc;    // horizontal counter
-    wire [N_PIXEL_WIDTH-1:0] vc;    // vertical counter
+    wire [N_COUNTER_WIDTH-1:0] hc;    // horizontal counter
+    wire [N_COUNTER_WIDTH-1:0] vc;    // vertical counter
     wire activevideo; // 1 if displaying pixels, 0 otherwise
 
     VGAsyncGen vga_inst( .clk_i(clk_i), .hsync_o(HS), .vsync_o(VS), .x_px_o(x_px), .y_px_o(y_px), .hc_o(hc), .vc_o(vc), .activevideo_o(activevideo));
@@ -120,17 +127,17 @@ module top (
     wire [N_PIXEL_WIDTH-1:0] hmem; // adjusted current x position of the pixel
     wire [N_PIXEL_WIDTH-1:0] vmem; // adjusted current y position of the pixel
     // register must be loaded 2 cycles before access, so we adjust the addr to be 2 px ahead
-    assign hmem = (hc >= 799) ? hc - 160 : (hc >= 158) ? hc + 2 - 160 : 0; // 798 = hpixels - 2, 160 = blackH, 158 = blackH - 2
+    assign hmem = (hc >= H_PIXELS-1) ? hc - H_BLACK : (hc >= H_BLACK-2) ? hc + 2 - H_BLACK : 0; // 798 = hpixels - 2, 160 = blackH, 158 = blackH - 2
     // x_px and y_px are 0 when !activevideo, so we need to adjust the vertical pixel too for the first character
-    assign vmem = (hc == 158 || hc == 159 || hc == 160) ? vc - 45 : y_px; // 45 = blackV
+    assign vmem = (hc == H_BLACK-2 || hc == H_BLACK-1 || hc == H_BLACK) ? vc - V_BLACK : y_px; // 45 = blackV
 
-    assign current_col = hmem[9:3]; 
-    assign current_row = vmem[9:4]; 
+    assign current_col = hmem[N_PIXEL_WIDTH-1:C_ADDR_WIDTH]; 
+    assign current_row = vmem[N_PIXEL_WIDTH-1:C_ADDR_HEIGHT]; 
     //x_img and y_img are used to index within the look up
-    wire [2:0] x_img; // indicate X position inside the tile (0-7)
-    wire [3:0] y_img; // inidicate Y position inside the tile (0-15)
-    assign x_img = x_px[2:0] + 1; // similar as hmem, we need to load the pixel 1 cycle earlier, so we adjust the fetch to be 1 ahead
-    assign y_img = y_px[3:0]; 
+    wire [C_ADDR_WIDTH-1:0] x_img; // indicate X position inside the tile (0-7)
+    wire [C_ADDR_HEIGHT-1:0] y_img; // inidicate Y position inside the tile (0-15)
+    assign x_img = x_px[C_ADDR_WIDTH-1:0] + 1; // similar as hmem, we need to load the pixel 1 cycle earlier, so we adjust the fetch to be 1 ahead
+    assign y_img = y_px[C_ADDR_HEIGHT-1:0]; 
 
     reg wr_en;                      // screen buffer write enable
     reg [N_COL_WIDTH-1:0] col_w;    // column of the tile to write
@@ -145,12 +152,12 @@ module top (
         if (!wr_rx1 && WR_RX) begin // WR_RX rising edge
             case (data_counter)
                 2'b00: begin
-                    if (dataRX[6:0] >= 80) col_w <= dataRX[6:0] - 80;
-                    else col_w <= dataRX[6:0];
+                    if (dataRX[N_COL_WIDTH-1:0] >= 80) col_w <= dataRX[N_COL_WIDTH-1:0] - 80;
+                    else col_w <= dataRX[N_COL_WIDTH-1:0];
                 end
-                2'b01: row_w <= dataRX[4:0];
+                2'b01: row_w <= dataRX[N_ROW_WIDTH-1:0];
                 2'b10: begin
-                    din <= dataRX[6:0];
+                    din <= dataRX[N_CHARS_WIDTH-1:0];
                     wr_en <= 1'b1;
                 // 2'b11: ignore new line character
                 end
