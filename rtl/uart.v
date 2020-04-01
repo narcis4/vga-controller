@@ -1,6 +1,6 @@
 // Uart receiver
 module uart(
-	input	wire        clk_i,     // 25MHz clock
+	input	wire        clk_i,     // 122.61MHz clock
 	input	wire        uart_rx_i, // bit received from the uart
 	//input   wire rst,
 	output	reg	        wr_o,    // 1 when data_o is valid, 0 otherwise
@@ -8,7 +8,7 @@ module uart(
 );
 
 
-    localparam clk_frequency = 25e6;
+    localparam clk_frequency = 122.61e6;
     parameter baudRate = 115200; 
     parameter if_parity = 0; // 0 no parity bit, 1 otherwise
     localparam BAUD_WIDTH = 16;

@@ -1,15 +1,15 @@
 // Screen buffer divided in 80x30 tiles, each containing the 7 bit address of a character
 module buffer 
 #(
-    parameter H_TILES = 640/8,             // 640x480 resolution and chars of 8x16 pixels
-    parameter V_TILES = 480/16,
-    parameter NUM_TILES = H_TILES*V_TILES, // 80x30 = 2400
-    parameter ADDR_COL_WIDTH = 7,          // log2(80)
-    parameter ADDR_ROW_WIDTH = 5,          // log2(30)
+    parameter H_TILES = 1400/8,             // 1400x1050 resolution and chars of 8x16 pixels
+    parameter V_TILES = 1050/16,
+    parameter NUM_TILES = H_TILES*V_TILES, // 175x65 = 11375
+    parameter ADDR_COL_WIDTH = 8,          // log2(175)
+    parameter ADDR_ROW_WIDTH = 7,          // log2(65)
     parameter DATA_WIDTH = 7               // log2(128 possible characters)
 )
 (
-    input wire                  clk_i,       // 25 MHz clock
+    input wire                  clk_i,       // 122.61 MHz clock
     input wire                  wr_en_i,     // write enable for the data input
     input wire [ADDR_COL_WIDTH-1:0] col_w_i, // column of tile to write
     input wire [ADDR_ROW_WIDTH-1:0] row_w_i, // row of tile to write
