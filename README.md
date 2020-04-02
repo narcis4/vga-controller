@@ -13,5 +13,8 @@ Then you send the design with:
 ```
 make upload
 ```
-To write characters you have to send the data through UART. First you send the column (0-79), then the row (0-29) and then the ASCII code of the character you want to display (0-127). The next 8 bits sent are ignored due to endlines to facilitate use of UART through terminal. 
+To write characters you have to send the data through UART. First you send the column (0-79), then the row (0-29) and then the ASCII code of the character you want to display (0-127). The next 8 bits sent are ignored due to endlines to facilitate use of UART through terminal. You can use the next command in the terminal to send data to the UART.
+```
+cat >/dev/ttyACM0
+```
 
