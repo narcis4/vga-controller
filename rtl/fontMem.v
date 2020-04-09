@@ -1,9 +1,9 @@
 // Memory map of the representation of the 128 ASCII characters in 8x16 pixels
 module fontMem 
 #(
-    parameter FONT_FILE = "charmem2.list", // bitmap of the characters sorted by ASCII code
-    parameter ADDR_WIDTH = 7,              // log2(128 characters)
-    parameter DATA_WIDTH = 8*16            // 8x16 pixels per character
+    parameter FONT_FILE = "charmem3.list", // bitmap of the characters sorted by ASCII code
+    parameter ADDR_WIDTH = 11,              // log2(128 characters)
+    parameter DATA_WIDTH = 8          // 8x16 pixels per character
 )
 (
     input wire                  clk_i,  // 25MHz clock

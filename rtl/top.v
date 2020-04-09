@@ -137,7 +137,7 @@ module top (
     wire [C_ADDR_WIDTH-1:0] x_img; // indicate X position inside the tile (0-7)
     wire [C_ADDR_HEIGHT-1:0] y_img; // inidicate Y position inside the tile (0-15)
     assign x_img = x_px[C_ADDR_WIDTH-1:0] + 1; // similar as hmem, we need to load the pixel 1 cycle earlier, so we adjust the fetch to be 1 ahead
-    assign y_img = y_px[C_ADDR_HEIGHT-1:0]; 
+    assign y_img = (hc == H_BLACK-1) ? vmem[C_ADDR_HEIGHT-1:0] : y_px[C_ADDR_HEIGHT-1:0]; // update y_img 1 cycle before to fetch the proper line in font memory
 
     reg wr_en;                      // screen buffer write enable
     reg [N_COL_WIDTH-1:0] col_w;    // column of the tile to write
@@ -168,10 +168,14 @@ module top (
     end
 
     wire [N_CHARS_WIDTH-1:0] char_addr; // address of the char in the bitmap, ASCII code
-    wire [0:C_WIDTH*C_HEIGHT-1] char; // bitmap of 1 character
+    wire [0:C_WIDTH-1] char; // bitmap of 1 character
+    wire [N_CHARS_WIDTH+C_ADDR_HEIGHT-1:0] font_in; 
     
     buffer buf_inst( .clk_i(clk_i), .wr_en_i(wr_en), .col_w_i(col_w), .row_w_i(row_w), .col_r_i(current_col), .row_r_i(current_row), .din_i(din), .dout_o(char_addr));
-    fontMem fmem_inst( .clk_i(clk_i), .addr_i(char_addr), .dout_o(char));
+    
+    assign font_in = {char_addr, y_img};
+
+    fontMem fmem_inst( .clk_i(clk_i), .addr_i(font_in), .dout_o(char));
 
     //Update next pixel color
     //always @(posedge clk_i, negedge rstn) begin
@@ -186,9 +190,9 @@ module top (
         //if We don't use the active video pixel value will increase in the 
         //section outside the display as well.
         if (activevideo) begin
-                R_int <= char[y_img*C_WIDTH+x_img] ? COLOR_1 : COLOR_0; // paint white if pixel from the bitmap is active, black otherwise
-                G_int <= char[y_img*C_WIDTH+x_img] ? COLOR_1 : COLOR_0; 
-                B_int <= char[y_img*C_WIDTH+x_img] ? COLOR_1 : COLOR_0; 
+                R_int <= char[x_img] ? COLOR_1 : COLOR_0; // paint white if pixel from the bitmap is active, black otherwise
+                G_int <= char[x_img] ? COLOR_1 : COLOR_0; 
+                B_int <= char[x_img] ? COLOR_1 : COLOR_0; 
         end
     end
 
