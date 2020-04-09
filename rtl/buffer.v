@@ -34,9 +34,9 @@ module buffer
     // read and write operation
     always @(posedge clk_i)
     begin
-        dout_o <= bmem[row_r_i * H_TILES + col_r_i]; 
+        dout_o <= bmem[(col_r_i << ADDR_ROW_WIDTH) + row_r_i]; 
         if (wr_en_i) begin
-            bmem[row_w_i * H_TILES + col_w_i] <= din_i;
+            bmem[(col_r_i << ADDR_ROW_WIDTH) + row_r_i] <= din_i;
         end
     end
 

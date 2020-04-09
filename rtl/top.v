@@ -143,7 +143,7 @@ module top (
     wire [N_PIXEL_WIDTH-1:0] hmem; // adjusted current x position of the pixel
     wire [N_PIXEL_WIDTH-1:0] vmem; // adjusted current y position of the pixel
     // register must be loaded 2 cycles before access, so we adjust the addr to be 2 px ahead
-    assign hmem = (hc >= H_PIXELS-1) ? hc - H_BLACK : (hc >= H_BLACK-2) ? hc + 2 - H_BLACK : 0; // 798 = hpixels - 2, 160 = blackH, 158 = blackH - 2
+    assign hmem = (hc >= H_BLACK-2) ? hc + 2 - H_BLACK : 0; // 798 = hpixels - 2, 160 = blackH, 158 = blackH - 2
     // x_px and y_px are 0 when !activevideo, so we need to adjust the vertical pixel too for the first character
     assign vmem = (hc == H_BLACK-2 || hc == H_BLACK-1 || hc == H_BLACK) ? vc - V_BLACK : y_px; // 45 = blackV
 
@@ -202,9 +202,9 @@ module top (
         //if We don't use the active video pixel value will increase in the 
         //section outside the display as well.
         if (activevideo) begin
-                R_int <= char[y_img*C_WIDTH+x_img] ? COLOR_1 : COLOR_0; // paint white if pixel from the bitmap is active, black otherwise
-                G_int <= char[y_img*C_WIDTH+x_img] ? COLOR_1 : COLOR_0; 
-                B_int <= char[y_img*C_WIDTH+x_img] ? COLOR_1 : COLOR_0; 
+                R_int <= char[(y_img<<C_ADDR_WIDTH)+x_img] ? COLOR_1 : COLOR_0; // paint white if pixel from the bitmap is active, black otherwise
+                G_int <= char[(y_img<<C_ADDR_WIDTH)+x_img] ? COLOR_1 : COLOR_0; 
+                B_int <= char[(y_img<<C_ADDR_WIDTH)+x_img] ? COLOR_1 : COLOR_0; 
         end
     end
 

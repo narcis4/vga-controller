@@ -62,17 +62,17 @@ module VGAsyncGen (
     always @(posedge clk_i)
     begin
         // First check if we are within vertical active video range.
-        if (activevideo_o)
-        begin
+        //if (activevideo_o)
+        //begin
             x_px_o <= hc_o - BLACK_H;
             y_px_o <= vc_o - BLACK_V;
-        end
-        else
+        //end
+        /*else
         // We are outside active video range so display black.
         begin
             x_px_o <= 0;
             y_px_o <= 0;
-        end
+        end*/
      end
  endmodule
 
