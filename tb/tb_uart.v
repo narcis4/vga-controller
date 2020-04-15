@@ -1,6 +1,6 @@
 `timescale 1us/10ns
 
-module uart_tb;
+module tb_uart;
 
     reg clk;
     reg rx;
@@ -9,8 +9,8 @@ module uart_tb;
     reg error;
     
     initial begin
-        $dumpfile("uart_tb.vcd");
-        $dumpvars(0, uart_tb);
+        $dumpfile("tb_uart.vcd");
+        $dumpvars(0, tb_uart);
         #10000 $finish;
     end
     

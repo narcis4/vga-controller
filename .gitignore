@@ -2,3 +2,4 @@
 *.vcd
 /rtl/database
 /rtl/tasks
+*.x

@@ -1,6 +1,6 @@
 `timescale 1ns/1ns
 
-module buffer_tb;
+module tb_buffer;
 
     reg clk;
     reg wr_en;
@@ -15,8 +15,8 @@ module buffer_tb;
     reg error;
 
     initial begin
-        $dumpfile("buffer_tb.vcd");
-        $dumpvars(0, buffer_tb);
+        $dumpfile("tb_buffer.vcd");
+        $dumpvars(0, tb_buffer);
         wait(row_r == 5'd29 && col_r == 7'd79 && write_done); // last tile, bottom right
         if (error == 1'b0) $display("PASS");
         $finish;

@@ -1,6 +1,6 @@
 `timescale 1us/10ns
 
-module top_tb;
+module tb_top;
 
     reg clk;
     reg rx;
@@ -8,8 +8,8 @@ module top_tb;
     reg error;
 
     initial begin
-        $dumpfile("top_tb.vcd");
-        $dumpvars(0, top_tb);
+        $dumpfile("tb_top.vcd");
+        $dumpvars(0, tb_top);
         #50000 if (error == 1'b0) $display("PASS");
         $finish;
     end

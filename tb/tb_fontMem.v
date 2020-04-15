@@ -1,6 +1,6 @@
 `timescale 1ns/1ns
 
-module fontMem_tb;
+module tb_fontMem;
 
     reg clk;
     reg [10:0] addr;
@@ -9,8 +9,8 @@ module fontMem_tb;
     reg error;
 
     initial begin
-        $dumpfile("fontMem_tb.vcd");
-        $dumpvars(0, fontMem_tb);
+        $dumpfile("tb_fontMem.vcd");
+        $dumpvars(0, tb_fontMem);
         wait(addr == 11'd2047); // last character address
         if (error == 1'b0) $display("PASS");
         $finish;
@@ -20,7 +20,7 @@ module fontMem_tb;
         clk = 1'b0;
         addr = 11'd0;
         error = 1'b0;
-        $readmemb("charmem3.list", expected);
+        $readmemb("charmem_8b_data.list", expected);
     end
         
     fontMem dut_fontMem( .clk_i(clk), .addr_i(addr), .dout_o(dout));

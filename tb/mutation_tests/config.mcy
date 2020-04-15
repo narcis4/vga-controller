@@ -3,11 +3,11 @@ size 500
 tags COVERED UNCOVERED NOCHANGE FMGAP
 
 [script]
-read_verilog buffer.v
+read_verilog ../../rtl/buffer.v
 prep -top buffer
 
 [files]
-buffer.v
+../../rtl/buffer.v
 
 [logic]
 sim_okay = result("test_sim") == "PASS"

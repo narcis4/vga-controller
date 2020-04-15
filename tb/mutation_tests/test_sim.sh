@@ -19,7 +19,7 @@ set -ex
 yosys -ql mutate.log mutate.ys
 
 ## run the testbench with the mutated module substituted for the original
-iverilog -o sim ../../buffer_tb.v mutated.v
+iverilog -o sim ../../../tb_buffer.v mutated.v
 vvp -n sim > sim.out
 
 ## check simulation output to obtain result status
