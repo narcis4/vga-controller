@@ -20,7 +20,7 @@ module tb_fontMem;
         clk = 1'b0;
         addr = 11'd0;
         error = 1'b0;
-        $readmemb("charmem_8b_data.list", expected);
+        $readmemb("../rtl/char_bitmap/charmem_8b_data.list", expected);
     end
         
     fontMem dut_fontMem( .clk_i(clk), .addr_i(addr), .dout_o(dout));
