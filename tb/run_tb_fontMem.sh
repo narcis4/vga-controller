@@ -11,7 +11,7 @@ then
     ./tb_fontMem.x > foo.txt
     rm foo.txt
     rm tb_fontMem.x
-    gtkwave tb_fontMem.vcd signals_fontMem.gtkw
+    gtkwave tb_fontMem.vcd signals_config/signals_fontMem.gtkw
     #rm tb_fontMem.vcd
 fi
 

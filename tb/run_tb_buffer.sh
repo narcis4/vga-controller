@@ -11,7 +11,7 @@ then
     ./tb_buffer.x > foo.txt
     rm foo.txt
     rm tb_buffer.x
-    gtkwave tb_buffer.vcd signals_buffer.gtkw
+    gtkwave tb_buffer.vcd signals_config/signals_buffer.gtkw
     #rm tb_buffer.vcd
 fi
 

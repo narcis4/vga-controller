@@ -11,7 +11,7 @@ then
     ./tb_uart.x > foo.txt
     rm foo.txt
     rm tb_uart.x
-    gtkwave tb_uart.vcd signals_uart.gtkw
+    gtkwave tb_uart.vcd signals_config/signals_uart.gtkw
     #rm tb_uart.vcd
 fi
 

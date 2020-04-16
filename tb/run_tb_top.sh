@@ -11,7 +11,7 @@ then
     ./tb_top.x > foo.txt
     rm foo.txt
     rm tb_top.x
-    gtkwave tb_top.vcd
+    gtkwave tb_top.vcd signals_config/signals_top.gtkw
     #rm tb_top.vcd
 fi
 
