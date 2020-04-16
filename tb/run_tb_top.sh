@@ -1,6 +1,6 @@
 #!/bin/bash
 
-iverilog -o tb_top.x tb_top.v ../rtl/top.v ../rtl/fontMem.v ../rtl/buffer.v ../rtl/uart.v
+iverilog -o tb_top.x tb_top.v ../rtl/top.v ../rtl/fontMem.v ../rtl/buffer.v ../rtl/uart.v ../rtl/VGAsyncGen.v
 if [ -z "$1" ]
 then 
     ./tb_top.x

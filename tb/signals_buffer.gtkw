@@ -1,0 +1,35 @@
+[*]
+[*] GTKWave Analyzer v3.3.86 (w)1999-2017 BSI
+[*] Thu Apr 16 07:55:02 2020
+[*]
+[dumpfile] "/home/narcis/Simple_VGA_buffer/tb/tb_buffer.vcd"
+[dumpfile_mtime] "Thu Apr 16 07:52:30 2020"
+[dumpfile_size] 489689
+[savefile] "/home/narcis/Simple_VGA_buffer/tb/signals_buffer.gtkw"
+[timestart] 0
+[size] 1853 1018
+[pos] -29 -29
+*0.000000 1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] tb_buffer.
+[sst_width] 263
+[signals_width] 160
+[sst_expanded] 1
+[sst_vpaned_height] 292
+@28
+tb_buffer.clk
+tb_buffer.error
+@22
+tb_buffer.col_r[6:0]
+tb_buffer.row_r[4:0]
+tb_buffer.dout[6:0]
+@29
+tb_buffer.wr_en
+@22
+tb_buffer.col_w[6:0]
+tb_buffer.row_w[4:0]
+tb_buffer.din[6:0]
+@28
+tb_buffer.ini_read_done
+tb_buffer.write_done
+[pattern_trace] 1
+[pattern_trace] 0
