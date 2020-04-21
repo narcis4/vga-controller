@@ -1,10 +1,21 @@
 // Top module, instantiates and wires other modules, defines background and character color, adjusts current pixel positions
 // and processes data from uart
-module top (
+module top #(
+    localparam	C_AXI_DATA_WIDTH = 32,
+    parameter	C_AXI_ADDR_WIDTH = $clog2(2400/32),
+    localparam	ADDRLSB = $clog2(C_AXI_DATA_WIDTH)-3
+)
+(
     input wire clk_i,	          // 25MHz clock input
     //input wire RSTN_BUTTON, // rstn,
-    input wire rx_i,            // Tx from the computer
-    output wire [15:0] PMOD   // VGA PMOD
+    output wire [15:0] PMOD,   // VGA PMOD
+    input wire [C_AXI_DATA_WIDTH-1:0] axil_wdata_i,
+    input wire [C_AXI_DATA_WIDTH/8-1:0] axil_wstrb_i,
+    input wire [C_AXI_ADDR_WIDTH-ADDRLSB-1:0] axil_waddr_i,
+    input wire axil_wready_i
+    input wire axil_rreq_i,
+    input wire [C_AXI_ADDR_WIDTH-ADDRLSB-1:0] axil_raddr_i,
+    output reg [C_AXI_DATA_WIDTH-1:0] axil_rdata_o
   );
 
 //--------------------
@@ -171,7 +182,8 @@ module top (
     wire [0:C_WIDTH-1] char; // bitmap of 1 character
     wire [N_CHARS_WIDTH+C_ADDR_HEIGHT-1:0] font_in; 
     
-    buffer buf_inst( .clk_i(clk_i), .wr_en_i(wr_en), .col_w_i(col_w), .row_w_i(row_w), .col_r_i(current_col), .row_r_i(current_row), .din_i(din), .dout_o(char_addr));
+    buffer buf_inst( .clk_i(clk_i), .wr_en_i(axil_wready_i), .w_addr_i(axil_waddr_i), .w_strb_i(axil_wstrb_i), .r_addr_i(axil_raddr_i), .r_req_i(axil_rreq_i), 
+.col_r_i(current_col), .row_r_i(current_row), .din_i(axil_wdata_i), .dout_o(char_addr), .r_data_o(axil_rdata_o));
     
     assign font_in = {char_addr, y_img};
 
