@@ -3,3 +3,4 @@
 /rtl/database
 /rtl/tasks
 *.x
+/tb/AXI_VGA_prfreg

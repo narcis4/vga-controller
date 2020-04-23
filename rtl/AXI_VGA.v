@@ -45,46 +45,42 @@
 //
 module AXI_VGA #(
 		// {{{
-		//
-		// Size of the AXI-lite bus.  These are fixed, since 1) AXI-lite
-		// is fixed at a width of 32-bits by Xilinx def'n, and 2) since
-		// we only ever have 4 configuration words.
-		parameter	C_AXI_ADDR_WIDTH = $clog2(2400/32),
-		localparam	C_AXI_DATA_WIDTH = 32,
-		parameter [0:0]	OPT_SKIDBUFFER = 1'b0,
-		parameter [0:0]	OPT_LOWPOWER = 0,
-		localparam	ADDRLSB = $clog2(C_AXI_DATA_WIDTH)-3
+		parameter	C_AXI_ADDR_WIDTH = $clog2(2400), // Addr width based on the number of registers
+		parameter	C_AXI_DATA_WIDTH = 32, // Width of the AXI-lite bus
+		parameter [0:0]	OPT_SKIDBUFFER = 1'b0, // This determines if we want to use more logic to achieve 1 transaction per bus cycle
+		parameter [0:0]	OPT_LOWPOWER = 0, // Lowpower option to disable channels if inactive
+		parameter	ADDRLSB = $clog2(C_AXI_DATA_WIDTH)-3 // Least significant bits from address not used due to write strobes
 		// }}}
 	) (
 		// {{{
-		input wire					        S_AXI_ACLK,
-		input wire					        S_AXI_ARESETN,
+		input wire					        S_AXI_ACLK, // AXI bus clock
+		input wire					        S_AXI_ARESETN, // AXI reset
 		//
-		input wire					        S_AXI_AWVALID,
-		output wire					        S_AXI_AWREADY,
-		input wire [C_AXI_ADDR_WIDTH-1:0]   S_AXI_AWADDR,
-		input wire [2:0]			        S_AXI_AWPROT,
+		input wire					        S_AXI_AWVALID, // The write address from the master in AWADDR is valid and can be read
+		output wire					        S_AXI_AWREADY, // The slave (the VGA) is ready to read the write address
+		input wire [C_AXI_ADDR_WIDTH-1:0]   S_AXI_AWADDR, // The write address for the transaction
+		input wire [2:0]			        S_AXI_AWPROT, // The write address protection level (level of priviledge)
 		//
-		input wire					        S_AXI_WVALID,
-		output wire					        S_AXI_WREADY,
-		input wire [C_AXI_DATA_WIDTH-1:0]   S_AXI_WDATA,
-		input wire [C_AXI_DATA_WIDTH/8-1:0] S_AXI_WSTRB,
+		input wire					        S_AXI_WVALID, // The write data in WDATA is valid and can be read
+		output wire					        S_AXI_WREADY, // The VGA is ready to read the write data
+		input wire [C_AXI_DATA_WIDTH-1:0]   S_AXI_WDATA, // The write data from the master
+		input wire [C_AXI_DATA_WIDTH/8-1:0] S_AXI_WSTRB, // This determines which bytes of the write data to write and to leave the rest unchanged
 		//
-		output wire					        S_AXI_BVALID,
-		input wire					        S_AXI_BREADY,
-		output wire [1:0]				    S_AXI_BRESP,
+		output wire					        S_AXI_BVALID, // Write acknowledgement
+		input wire					        S_AXI_BREADY, // The master is ready to receive the write acknowledgement
+		output wire [1:0]				    S_AXI_BRESP, // The VGA sends the result code for the write operation
 		//
-		input wire					        S_AXI_ARVALID,
-		output wire					        S_AXI_ARREADY,
-		input wire [C_AXI_ADDR_WIDTH-1:0]	S_AXI_ARADDR,
-		input wire [2:0]				    S_AXI_ARPROT,
+		input wire					        S_AXI_ARVALID, // The read address from the master in ARADDR is valid and can be read
+		output wire					        S_AXI_ARREADY, // The VGA is ready to read the read address
+		input wire [C_AXI_ADDR_WIDTH-1:0]	S_AXI_ARADDR, // The read address for the transaction
+		input wire [2:0]				    S_AXI_ARPROT, // The read address level of priviledge
 		//
-		output wire					        S_AXI_RVALID,
-		input wire					        S_AXI_RREADY,
-		output wire	[C_AXI_DATA_WIDTH-1:0]  S_AXI_RDATA,
-		output wire [1:0]				    S_AXI_RRESP,
+		output wire					        S_AXI_RVALID, // The read data in RDATA is valid and can be read by the master
+		input wire					        S_AXI_RREADY, // The master is ready to read the RDATA
+		output wire	[C_AXI_DATA_WIDTH-1:0]  S_AXI_RDATA, // The read data from the slave
+		output wire [1:0]				    S_AXI_RRESP, // The VGA sends the result for the read operation
 		// }}}
-        output wire [15:0] vga_o;
+        output wire [15:0] vga_o // The VGA signal containing the RGB and horizontal and vertical sync signals
 	);
 
 	////////////////////////////////////////////////////////////////////////
@@ -96,19 +92,19 @@ module AXI_VGA #(
 	// {{{
 	wire i_reset = !S_AXI_ARESETN;
 
-	wire				                axil_write_ready;
-	wire [C_AXI_ADDR_WIDTH-ADDRLSB-1:0]	awskd_addr;
+	wire				                axil_write_ready; // Same as AWREADY
+	wire [C_AXI_ADDR_WIDTH-1:0]	awskd_addr; // Same as AWADDR //wire [C_AXI_ADDR_WIDTH-ADDRLSB-1:0]	awskd_addr; 
 	//
-	wire [C_AXI_DATA_WIDTH-1:0]	        wskd_data;
-	wire [C_AXI_DATA_WIDTH/8-1:0]       wskd_strb;
-	reg			                        axil_bvalid;
+	wire [C_AXI_DATA_WIDTH-1:0]	        wskd_data; // Same as WDATA
+	wire [C_AXI_DATA_WIDTH/8-1:0]       wskd_strb; // Same as WSTRB
+	reg			                        axil_bvalid; // Same as BVALID
 	//
-	wire				                axil_read_ready;
-	wire [C_AXI_ADDR_WIDTH-ADDRLSB-1:0] arskd_addr;
-	reg	[C_AXI_DATA_WIDTH-1:0]	        axil_read_data;
-	reg				                    axil_read_valid;
+	wire				                axil_read_ready; // The VGA is about to read the ARADDR
+	wire [C_AXI_ADDR_WIDTH-1:0] arskd_addr; // Same as ARADDR //wire [C_AXI_ADDR_WIDTH-ADDRLSB-1:0] arskd_addr;
+	wire [C_AXI_DATA_WIDTH-1:0]	    axil_read_data; // Same as RDATA
+	reg				                    axil_read_valid; // Same as RVALID
 
-    wire axil_read_req;
+    wire axil_read_req; // The VGA is about to read from the registers into RDATA
 
 	//reg	[31:0]	r0, r1, r2, r3;
 	//wire [31:0]	wskd_r0, wskd_r1, wskd_r2, wskd_r3;
@@ -153,7 +149,7 @@ module AXI_VGA #(
 		assign	axil_write_ready = awskd_valid && wskd_valid
 				&& (!S_AXI_BVALID || S_AXI_BREADY);
 
-	end else begin : SIMPLE_WRITES
+	end else begin : SIMPLE_WRITES // Handshaking and control of the of the AXI write signals
 
 		reg	axil_awready;
 
@@ -170,7 +166,7 @@ module AXI_VGA #(
 		assign	S_AXI_AWREADY = axil_awready;
 		assign	S_AXI_WREADY  = axil_awready;
 
-		assign 	awskd_addr = S_AXI_AWADDR[C_AXI_ADDR_WIDTH-1:ADDRLSB];
+		assign 	awskd_addr = S_AXI_AWADDR[C_AXI_ADDR_WIDTH-1:0]; //assign 	awskd_addr = S_AXI_AWADDR[C_AXI_ADDR_WIDTH-1:ADDRLSB];
 		assign	wskd_data  = S_AXI_WDATA;
 		assign	wskd_strb  = S_AXI_WSTRB;
 
@@ -214,13 +210,13 @@ module AXI_VGA #(
 		assign	axil_read_ready = arskd_valid
 				&& (!axil_read_valid || S_AXI_RREADY);
 
-	end else begin : SIMPLE_READS
+	end else begin : SIMPLE_READS // Handshaking and control of the AXI read signals
 
 		reg	axil_arready;
 
 		always @(*) axil_arready = !S_AXI_RVALID;
 
-		assign	arskd_addr = S_AXI_ARADDR[C_AXI_ADDR_WIDTH-1:ADDRLSB];
+		assign	arskd_addr = S_AXI_ARADDR[C_AXI_ADDR_WIDTH-1:0]; //assign	arskd_addr = S_AXI_ARADDR[C_AXI_ADDR_WIDTH-1:ADDRLSB];
 		assign	S_AXI_ARREADY = axil_arready;
 		assign	axil_read_ready = (S_AXI_ARVALID && S_AXI_ARREADY);
         
@@ -309,9 +305,6 @@ module AXI_VGA #(
 	endfunction */
 	// }}}
 
-    top top_inst( .clk_i(S_AXI_ACLK), .PMOD(vga_o), .axil_wdata_i(wskd_data), .axil_wstrb_i(wskd_strb), .axil_waddr_i(awskd_addr), .axil_wready_i(axil_write_ready), 
-.axil_rreq_i(axil_read_req), .axil_raddr_i(arskd_addr), .axil_rdata_o(axil_read_data));
-
 	// Verilator lint_off UNUSED
 	wire	unused;
 	assign	unused = &{ 1'b0, S_AXI_AWPROT, S_AXI_ARPROT,
@@ -319,7 +312,11 @@ module AXI_VGA #(
 			S_AXI_AWADDR[ADDRLSB-1:0] };
 	// Verilator lint_on  UNUSED
 	// }}}
+
 `ifdef	FORMAL
+    top top_inst( .clk_i(S_AXI_ACLK), .PMOD(vga_o), .axil_wdata_i(wskd_data), .axil_wstrb_i(wskd_strb), .axil_waddr_i(awskd_addr), .axil_wready_i(axil_write_ready), 
+.axil_rreq_i(axil_read_req), .axil_raddr_i(arskd_addr), .axil_rdata_o(axil_read_data), .f_rdata_i(axil_read_data), .f_past_valid_i(f_past_valid), 
+.f_reset_i(S_AXI_ARESETN), .f_ready_i(axil_read_ready));//, .clk_axi_i(S_AXI_ACLK));
 	////////////////////////////////////////////////////////////////////////
 	//
 	// Formal properties used in verfiying this core
@@ -412,12 +409,12 @@ module AXI_VGA #(
 			&& axil_read_ready))
 	begin
 		assert(S_AXI_RVALID);
-		case($past(arskd_addr))
-		0: assert(S_AXI_RDATA == $past(r0));
-		1: assert(S_AXI_RDATA == $past(r1));
-		2: assert(S_AXI_RDATA == $past(r2));
-		3: assert(S_AXI_RDATA == $past(r3));
-		endcase
+        /*case(arskd_addr)
+            12'd2397: assert(S_AXI_RDATA == $past({8'b0, bmem[arskd_addr+2], 1'b0, bmem[arskd_addr+1], 1'b0, bmem[arskd_addr]}));
+            12'd2398: assert(S_AXI_RDATA == $past({16'b0, bmem[arskd_addr+1], 1'b0, bmem[arskd_addr]}));
+            12'd2399: assert(S_AXI_RDATA == $past({24'b0, bmem[arskd_addr]}));
+            default: assert(S_AXI_RDATA == $past({bmem[arskd_addr+3], 1'b0, bmem[arskd_addr+2], 1'b0, bmem[arskd_addr+1], 1'b0, bmem[arskd_addr]}));
+        endcase*/
 	end
 
 	//
@@ -443,6 +440,9 @@ module AXI_VGA #(
 
 	// }}}
 	// }}}
+`else
+    top top_inst( .clk_i(S_AXI_ACLK), .PMOD(vga_o), .axil_wdata_i(wskd_data), .axil_wstrb_i(wskd_strb), .axil_waddr_i(awskd_addr), .axil_wready_i(axil_write_ready), 
+.axil_rreq_i(axil_read_req), .axil_raddr_i(arskd_addr), .axil_rdata_o(axil_read_data));
 `endif
 endmodule
 

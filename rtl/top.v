@@ -1,21 +1,28 @@
 // Top module, instantiates and wires other modules, defines background and character color, adjusts current pixel positions
 // and processes data from uart
 module top #(
-    localparam	C_AXI_DATA_WIDTH = 32,
-    parameter	C_AXI_ADDR_WIDTH = $clog2(2400/32),
-    localparam	ADDRLSB = $clog2(C_AXI_DATA_WIDTH)-3
+    parameter	C_AXI_DATA_WIDTH = 32,
+    parameter	C_AXI_ADDR_WIDTH = $clog2(2400),
+    parameter	ADDRLSB = $clog2(C_AXI_DATA_WIDTH)-3
 )
 (
+`ifdef FORMAL
+    input wire [C_AXI_DATA_WIDTH-1:0] f_rdata_i,
+    input wire f_past_valid_i,
+    input wire f_reset_i,
+    input wire f_ready_i,
+    //input wire clk_axi_i,
+`endif
     input wire clk_i,	          // 25MHz clock input
     //input wire RSTN_BUTTON, // rstn,
     output wire [15:0] PMOD,   // VGA PMOD
-    input wire [C_AXI_DATA_WIDTH-1:0] axil_wdata_i,
-    input wire [C_AXI_DATA_WIDTH/8-1:0] axil_wstrb_i,
-    input wire [C_AXI_ADDR_WIDTH-ADDRLSB-1:0] axil_waddr_i,
-    input wire axil_wready_i
-    input wire axil_rreq_i,
-    input wire [C_AXI_ADDR_WIDTH-ADDRLSB-1:0] axil_raddr_i,
-    output reg [C_AXI_DATA_WIDTH-1:0] axil_rdata_o
+    input wire [C_AXI_DATA_WIDTH-1:0] axil_wdata_i, // AXI write data
+    input wire [C_AXI_DATA_WIDTH/8-1:0] axil_wstrb_i, // AXI write strobe
+    input wire [C_AXI_ADDR_WIDTH-1:0] axil_waddr_i, // AXI write address //input wire [C_AXI_ADDR_WIDTH-ADDRLSB-1:0] axil_waddr_i,
+    input wire axil_wready_i, // AXI address write ready
+    input wire axil_rreq_i, // Determines whenthe VGA reads from the registers
+    input wire [C_AXI_ADDR_WIDTH-1:0] axil_raddr_i, // AXI read address//input wire [C_AXI_ADDR_WIDTH-ADDRLSB-1:0] axil_raddr_i,
+    output wire [C_AXI_DATA_WIDTH-1:0] axil_rdata_o // Data read from the registers
   );
 
 //--------------------
@@ -83,6 +90,11 @@ module top #(
         bf2_rstn <= bf1_rstn;
     end
     assign  rstn = bf2_rstn;*/
+    
+    reg clk25 = 1'b0;
+    always @(posedge clk_i) begin
+        clk25 <= !clk_i;
+    end
 
 //--------------------
 // IP internal signals
@@ -93,16 +105,16 @@ module top #(
     wire [N_COUNTER_WIDTH-1:0] vc;    // vertical counter
     wire activevideo; // 1 if displaying pixels, 0 otherwise
 
-    VGAsyncGen vga_inst( .clk_i(clk_i), .hsync_o(HS), .vsync_o(VS), .x_px_o(x_px), .y_px_o(y_px), .hc_o(hc), .vc_o(vc), .activevideo_o(activevideo));
+    VGAsyncGen vga_inst( .clk_i(clk25), .hsync_o(HS), .vsync_o(VS), .x_px_o(x_px), .y_px_o(y_px), .hc_o(hc), .vc_o(vc), .activevideo_o(activevideo));
 
     wire [UART_DATA_WIDTH-1:0] dataRX; // data received from uart
     wire WR_RX;        // uart valid data
 
     uart #(.baudRate(115200), .if_parity(1'b0))
 		uart_inst (
-			.clk_i(clk_i), 		
+			.clk_i(clk25), 		
 			//.rst(RSTN2), 	    	
-			.uart_rx_i(rx_i),		
+			//.uart_rx_i(rx_i),		
 			.wr_o(WR_RX), 	
 			.data_o(dataRX)		
 	);
@@ -158,7 +170,7 @@ module top #(
     reg [1:0] data_counter = 2'b00; // indicates what will the next data received by the uart mean
 
     // Read data from the uart following the sequence: column -> row -> data -> end line (ignore)
-    always @(posedge clk_i) begin
+    always @(posedge clk25) begin
         wr_en <= 1'b0;
         if (!wr_rx1 && WR_RX) begin // WR_RX rising edge
             case (data_counter)
@@ -180,18 +192,24 @@ module top #(
 
     wire [N_CHARS_WIDTH-1:0] char_addr; // address of the char in the bitmap, ASCII code
     wire [0:C_WIDTH-1] char; // bitmap of 1 character
-    wire [N_CHARS_WIDTH+C_ADDR_HEIGHT-1:0] font_in; 
-    
-    buffer buf_inst( .clk_i(clk_i), .wr_en_i(axil_wready_i), .w_addr_i(axil_waddr_i), .w_strb_i(axil_wstrb_i), .r_addr_i(axil_raddr_i), .r_req_i(axil_rreq_i), 
+    wire [N_CHARS_WIDTH+C_ADDR_HEIGHT-1:0] font_in; // address for access to the font memory, concatenation of char address and row
+
+`ifdef FORMAL
+    buffer buf_inst( .clk_i(clk25), .wr_en_i(axil_wready_i), .w_addr_i(axil_waddr_i), .w_strb_i(axil_wstrb_i), .r_addr_i(axil_raddr_i), .r_req_i(axil_rreq_i), 
+.col_r_i(current_col), .row_r_i(current_row), .din_i(axil_wdata_i), .dout_o(char_addr), .r_data_o(axil_rdata_o), .f_rdata_i(f_rdata_i), 
+.f_past_valid_i(f_past_valid_i), .f_reset_i(f_reset_i), .f_ready_i(f_ready_i), .clk_axi_i(clk_i));
+`else
+    buffer buf_inst( .clk_i(clk25), .wr_en_i(axil_wready_i), .w_addr_i(axil_waddr_i), .w_strb_i(axil_wstrb_i), .r_addr_i(axil_raddr_i), .r_req_i(axil_rreq_i), 
 .col_r_i(current_col), .row_r_i(current_row), .din_i(axil_wdata_i), .dout_o(char_addr), .r_data_o(axil_rdata_o));
+`endif
     
     assign font_in = {char_addr, y_img};
 
-    fontMem fmem_inst( .clk_i(clk_i), .addr_i(font_in), .dout_o(char));
+    fontMem fmem_inst( .clk_i(clk25), .addr_i(font_in), .dout_o(char));
 
     //Update next pixel color
     //always @(posedge clk_i, negedge rstn) begin
-    always @(posedge clk_i) begin
+    always @(posedge clk25) begin
         //if (!rstn) begin
                 //R_int <= 4'b0;
                 //G_int <= 4'b0;
