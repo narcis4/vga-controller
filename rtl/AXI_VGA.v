@@ -446,3 +446,5 @@ module AXI_VGA #(
 `endif
 endmodule
 
+`default_nettype wire
+

@@ -1,3 +1,5 @@
+`default_nettype none
+
 // Top module, instantiates and wires other modules, defines background and character color, adjusts current pixel positions
 // and processes data from uart
 module top #(
@@ -227,3 +229,5 @@ module top #(
     end
 
 endmodule
+
+`default_nettype wire

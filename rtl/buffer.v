@@ -1,3 +1,5 @@
+`default_nettype none
+
 // Screen buffer divided in 80x30 tiles, each containing the 7 bit address of a character
 module buffer 
 #(
@@ -84,5 +86,6 @@ module buffer
 	end
 `endif
             
-
 endmodule
+
+`default_nettype wire

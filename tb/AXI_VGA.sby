@@ -14,7 +14,7 @@ read -formal faxil_slave.v
 read -formal top.v
 read -formal buffer.v
 read_verilog VGAsyncGen.v
-read_verilog fontMem.v
+read -formal fontMem.v
 read_verilog uart.v
 --pycode-begin--
 cmd = "hierarchy -top AXI_VGA"

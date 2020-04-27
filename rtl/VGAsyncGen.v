@@ -18,6 +18,7 @@
 // Additional Comments: 
 //
 //////////////////////////////////////////////////////////////////////////////////
+`default_nettype none
 
 // Generation of the VGA sync signals, the position of the current pixel and the horizontal and vertical counters of the screen
 module VGAsyncGen (
@@ -95,5 +96,6 @@ module VGAsyncGen (
             y_px_o <= 0;
         end
      end
- endmodule
+endmodule
 
+`default_nettype wire

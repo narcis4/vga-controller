@@ -1,3 +1,5 @@
+`default_nettype none
+
 // Uart receiver
 module uart(
 	input	wire        clk_i,     // 25MHz clock
@@ -109,3 +111,4 @@ module uart(
 
 endmodule
 
+`default_nettype wire
