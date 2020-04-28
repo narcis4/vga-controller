@@ -6,7 +6,7 @@ module fontMem
 `ifdef FORMAL
     parameter FONT_FILE = "../../../rtl/char_bitmap/charmem_8b_data.list",
 `else
-    parameter FONT_FILE = "/../rtl/char_bitmap/charmem_8b_data.list", // bitmap of the characters sorted by ASCII code
+    parameter FONT_FILE = "../rtl/char_bitmap/charmem_8b_data.list", // bitmap of the characters sorted by ASCII code
 `endif
     parameter ADDR_WIDTH = 11,        // log2(128 characters)
     parameter DATA_WIDTH = 8          // 8x16 pixels per character

@@ -95,7 +95,7 @@ module top #(
     
     reg clk25 = 1'b0;
     always @(posedge clk_i) begin
-        clk25 <= !clk_i;
+        clk25 <= ~clk25;
     end
 
 //--------------------
@@ -196,12 +196,17 @@ module top #(
     wire [0:C_WIDTH-1] char; // bitmap of 1 character
     wire [N_CHARS_WIDTH+C_ADDR_HEIGHT-1:0] font_in; // address for access to the font memory, concatenation of char address and row
 
+    reg wr_ena = 1'b0;
+    always @(posedge clk_i) begin
+        wr_ena <= axil_wready_i;
+    end
+
 `ifdef FORMAL
-    buffer buf_inst( .clk_i(clk25), .wr_en_i(axil_wready_i), .w_addr_i(axil_waddr_i), .w_strb_i(axil_wstrb_i), .r_addr_i(axil_raddr_i), .r_req_i(axil_rreq_i), 
+    buffer buf_inst( .clk_i(clk25), .wr_en_i(wr_ena), .w_addr_i(axil_waddr_i), .w_strb_i(axil_wstrb_i), .r_addr_i(axil_raddr_i), .r_req_i(axil_rreq_i), 
 .col_r_i(current_col), .row_r_i(current_row), .din_i(axil_wdata_i), .dout_o(char_addr), .r_data_o(axil_rdata_o), .f_rdata_i(f_rdata_i), 
 .f_past_valid_i(f_past_valid_i), .f_reset_i(f_reset_i), .f_ready_i(f_ready_i), .clk_axi_i(clk_i));
 `else
-    buffer buf_inst( .clk_i(clk25), .wr_en_i(axil_wready_i), .w_addr_i(axil_waddr_i), .w_strb_i(axil_wstrb_i), .r_addr_i(axil_raddr_i), .r_req_i(axil_rreq_i), 
+    buffer buf_inst( .clk_i(clk25), .wr_en_i(wr_ena), .w_addr_i(axil_waddr_i), .w_strb_i(axil_wstrb_i), .r_addr_i(axil_raddr_i), .r_req_i(axil_rreq_i), 
 .col_r_i(current_col), .row_r_i(current_row), .din_i(axil_wdata_i), .dout_o(char_addr), .r_data_o(axil_rdata_o));
 `endif
     

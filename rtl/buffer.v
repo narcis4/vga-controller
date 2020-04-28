@@ -53,7 +53,6 @@ module buffer
     begin
         dout_o <= bmem[row_r_i * H_TILES + col_r_i]; 
         if (wr_en_i) begin
-            //integer k;
             for(k=0; k<C_AXI_DATA_WIDTH/8; k=k+1) begin
 			    if (w_strb_i[k] && (w_addr_i+k < NUM_TILES) ) bmem[w_addr_i+k] <= din_i[k*8+:7]; 
 		    end

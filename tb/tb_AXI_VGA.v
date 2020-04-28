@@ -229,7 +229,7 @@ module tb_AXI_VGA;
             $display("Read 2 timeout, AXI slave didn't put 2 valid datas in 16 cycles");
             error = 1'b1;
         end
-        if (read_data != 32'h11111111) begin
+        if (read_data != 32'h66661919) begin
             $display("Wrong first read 2 data");
             error = 1'b1;
         end  
