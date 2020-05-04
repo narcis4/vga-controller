@@ -4,3 +4,7 @@
 /rtl/tasks
 *.x
 /tb/AXI_VGA_prfreg
+/tb/qsim_AXI_VGA
+/tb/qsim_buffer
+/tb/qsim_top
+/tb/qsim_fontMem

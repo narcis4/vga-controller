@@ -1,3 +1,4 @@
+`default_nettype none
 `timescale 1ns/1ns
 
 module tb_fontMem;
@@ -20,7 +21,11 @@ module tb_fontMem;
         clk = 1'b0;
         addr = 11'd0;
         error = 1'b0;
+`ifdef WAVE
+        $readmemb("../../rtl/char_bitmap/charmem_8b_data.list", expected);
+`else
         $readmemb("../rtl/char_bitmap/charmem_8b_data.list", expected);
+`endif
     end
         
     fontMem dut_fontMem( .clk_i(clk), .addr_i(addr), .dout_o(dout));
@@ -38,3 +43,5 @@ module tb_fontMem;
     always #20 clk = !clk;
 
 endmodule // test
+
+`default_nettype wire

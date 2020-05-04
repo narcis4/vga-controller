@@ -1,17 +1,16 @@
 #!/bin/bash
 
-iverilog -o tb_top.x tb_top.v ../rtl/top.v ../rtl/fontMem.v ../rtl/buffer.v ../rtl/uart.v ../rtl/VGAsyncGen.v
 if [ -z "$1" ]
 then 
+    iverilog -o tb_top.x tb_top.v ../rtl/top.v ../rtl/fontMem.v ../rtl/buffer.v ../rtl/VGAsyncGen.v
     ./tb_top.x
     rm tb_top.x
+    rm tb_top.vcd
 fi
 if [ "$1" == 'w' ]
 then
-    ./tb_top.x > foo.txt
-    rm foo.txt
-    rm tb_top.x
-    gtkwave tb_top.vcd signals_config/signals_top.gtkw
-    #rm tb_top.vcd
+    mkdir -p qsim_top
+    cd qsim_top
+    vsim -do ../qsim_config/top.do
 fi
 

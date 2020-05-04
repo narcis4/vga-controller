@@ -9,40 +9,40 @@ module tb_AXI_VGA;
 	localparam [0:0]	OPT_LOWPOWER = 0;
 	localparam	ADDRLSB = $clog2(C_AXI_DATA_WIDTH)-3;
 
-    reg					        s_axi_aclk;
-	reg					        s_axi_aresetn;
+    reg					         s_axi_aclk;
+	reg					         s_axi_aresetn;
 	//
-	reg					        s_axi_awvalid;
-	wire					    s_axi_awready;
-	reg [C_AXI_ADDR_WIDTH-1:0]  s_axi_awaddr;
-	reg [2:0]			        s_axi_awprot;
+	reg					         s_axi_awvalid;
+	wire					     s_axi_awready;
+	reg [C_AXI_ADDR_WIDTH-1:0]   s_axi_awaddr;
+	reg [2:0]			         s_axi_awprot;
 	//
-	reg					        s_axi_wvalid;
+	reg					         s_axi_wvalid;
 	wire					     s_axi_wready;
 	reg [C_AXI_DATA_WIDTH-1:0]   s_axi_wdata;
 	reg [C_AXI_DATA_WIDTH/8-1:0] s_axi_wstrb;
 	//
-	wire					    s_axi_bvalid;
-	reg					        s_axi_bready;
-	wire [1:0]				    s_axi_bresp;
+	wire					     s_axi_bvalid;
+	reg					         s_axi_bready;
+	wire [1:0]				     s_axi_bresp;
 	//
-	reg					        s_axi_arvalid; 
-	wire					    s_axi_arready; 
-	reg [C_AXI_ADDR_WIDTH-1:0]	s_axi_araddr;
-	reg [2:0]				    s_axi_arprot;
+	reg					         s_axi_arvalid; 
+	wire					     s_axi_arready; 
+	reg [C_AXI_ADDR_WIDTH-1:0]	 s_axi_araddr;
+	reg [2:0]				     s_axi_arprot;
 	//
-	wire					    s_axi_rvalid;
-	reg					        s_axi_rready;
+	wire					     s_axi_rvalid;
+	reg					         s_axi_rready;
 	wire [C_AXI_DATA_WIDTH-1:0]  s_axi_rdata;
-	wire [1:0]				    s_axi_rresp;
+	wire [1:0]				     s_axi_rresp;
 	// }}}
-    wire [15:0] vga_o;
+    wire [15:0]                  vga_o;
     
-    reg error;
-    reg write_end;
-    reg [3:0] write_timeout;
-    reg read_end;
-    reg [3:0] read_timeout;
+    reg                        error;
+    reg                        write_end;
+    reg [3:0]                  write_timeout;
+    reg                        read_end;
+    reg [3:0]                  read_timeout;
     reg [C_AXI_DATA_WIDTH-1:0] read_data;
     reg [C_AXI_DATA_WIDTH-1:0] read_data2;
 
@@ -52,8 +52,11 @@ module tb_AXI_VGA;
         #2000 if (error == 1'b0) $display("PASS");
         $finish;
     end
-
+    
+    // This test makes 6 AXI-lite transactions, a read, a write, 2 writes (one right after the other, before the VGA has finished the first one) and 2 reads (also
+    // without waiting between them). The writes also test different write strobes and the edge registers based on address
     initial begin
+        // signal initialization
         s_axi_aclk = 1'b0;
         s_axi_aresetn = 1'b1;
         s_axi_awvalid = 1'b0;
@@ -74,6 +77,8 @@ module tb_AXI_VGA;
         read_timeout = 4'd0;
         read_data = 32'd0;
         read_data2 = 32'd0;
+
+        // first write, address 0, data 0xFFFFFFFF, strobe 1 (only writes the least significant register)
         #15 s_axi_awaddr = 12'd0;
         s_axi_awvalid = 1'b1;
         s_axi_wdata = 32'hFFFFFFFF;
@@ -101,6 +106,8 @@ module tb_AXI_VGA;
             $display("Write timeout, AXI slave was not ready for 10 cycles");
             error = 1'b1;
         end
+        
+        // first read, reads the address 0 to check the data written
         #6 s_axi_araddr = 12'd0;
         s_axi_arvalid = 1'b1;
         s_axi_rready = 1'b1;
@@ -132,6 +139,8 @@ module tb_AXI_VGA;
             $display("Wrong read data");
             error = 1'b1;
         end
+
+        // second and third writes, address 2396 and 2398, data 0x99999999 and 0xE6E6E6E6, strobe F
         #6 s_axi_awaddr = 12'd2396;
         s_axi_awvalid = 1'b1;
         s_axi_wdata = 32'h99999999;
@@ -180,6 +189,8 @@ module tb_AXI_VGA;
             $display("Write 2 timeout, AXI slave didn't make 2 transactions in 16 cycles");
             error = 1'b1;
         end
+
+        // second and third reads, check the data written before 
         #6 s_axi_araddr = 12'd2396;
         s_axi_arvalid = 1'b1;
         s_axi_rready = 1'b1;

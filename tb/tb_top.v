@@ -1,10 +1,22 @@
-`timescale 1us/10ns
+`timescale 1us/1ns
 
 module tb_top;
 
-    reg clk;
-    reg rx;
-    wire [15:0] pmod;
+    localparam	C_AXI_ADDR_WIDTH = $clog2(2400);
+	localparam	C_AXI_DATA_WIDTH = 32;
+	localparam	ADDRLSB = $clog2(C_AXI_DATA_WIDTH)-3;
+
+    reg                          clk;	       
+    //reg RSTN_BUTTON, // rstn,
+    wire [15:0]                  pmod;        
+    reg [C_AXI_DATA_WIDTH-1:0]   axil_wdata; 
+    reg [C_AXI_DATA_WIDTH/8-1:0] axil_wstrb; 
+    reg [C_AXI_ADDR_WIDTH-1:0]   axil_waddr; 
+    reg                          axil_wready;
+    reg                          axil_rreq;   
+    reg [C_AXI_ADDR_WIDTH-1:0]   axil_raddr;
+    wire [C_AXI_DATA_WIDTH-1:0]  axil_rdata;
+   
     reg error;
 
     initial begin
@@ -18,85 +30,20 @@ module tb_top;
     initial begin
         clk = 1'b0;
         error = 1'b0;
-        // send column 0
-        rx = 1'b0;         // start bit
-        #8.68 rx = 1'b0;   // data bits
-        #8.68 rx = 1'b0;
-        #8.68 rx = 1'b0;
-        #8.68 rx = 1'b0;
-        #8.68 rx = 1'b0;
-        #8.68 rx = 1'b0;
-        #8.68 rx = 1'b0;
-        #8.68 rx = 1'b0;
-        #8.68 rx = 1'b1;   // stop bit
-        // send row 0
-        #8.68 rx = 1'b0;
-        #8.68 rx = 1'b0;
-        #8.68 rx = 1'b0;
-        #8.68 rx = 1'b0;
-        #8.68 rx = 1'b0;
-        #8.68 rx = 1'b0;
-        #8.68 rx = 1'b0;
-        #8.68 rx = 1'b0;
-        #8.68 rx = 1'b0;
-        #8.68 rx = 1'b1;
-        // send ASCII 65 (character 'A')
-        #8.68 rx = 1'b0;
-        #8.68 rx = 1'b1;
-        #8.68 rx = 1'b0;
-        #8.68 rx = 1'b0;
-        #8.68 rx = 1'b0;
-        #8.68 rx = 1'b0;
-        #8.68 rx = 1'b0;
-        #8.68 rx = 1'b1;
-        #8.68 rx = 1'b0;
-        #8.68 rx = 1'b1;
-        // ignored end line character
-        #8.68 rx = 1'b0;
-        #8.68 rx = 1'b0;
-        #8.68 rx = 1'b0;
-        #8.68 rx = 1'b0;
-        #8.68 rx = 1'b0;
-        #8.68 rx = 1'b0;
-        #8.68 rx = 1'b0;
-        #8.68 rx = 1'b0;
-        #8.68 rx = 1'b0;
-        #8.68 rx = 1'b1;
-        // send column 79
-        #8.68 rx = 1'b0;
-        #8.68 rx = 1'b1;
-        #8.68 rx = 1'b1;
-        #8.68 rx = 1'b1;
-        #8.68 rx = 1'b1;
-        #8.68 rx = 1'b0;
-        #8.68 rx = 1'b0;
-        #8.68 rx = 1'b1;
-        #8.68 rx = 1'b0;
-        #8.68 rx = 1'b1;
-        // send row 29
-        #8.68 rx = 1'b0;
-        #8.68 rx = 1'b1;
-        #8.68 rx = 1'b0;
-        #8.68 rx = 1'b1;
-        #8.68 rx = 1'b1;
-        #8.68 rx = 1'b1;
-        #8.68 rx = 1'b0;
-        #8.68 rx = 1'b0;
-        #8.68 rx = 1'b0;
-        #8.68 rx = 1'b1;
-        // send ASCII 67 (character 'C')
-        #8.68 rx = 1'b0;
-        #8.68 rx = 1'b1;
-        #8.68 rx = 1'b1;
-        #8.68 rx = 1'b0;
-        #8.68 rx = 1'b0;
-        #8.68 rx = 1'b0;
-        #8.68 rx = 1'b0;
-        #8.68 rx = 1'b1;
-        #8.68 rx = 1'b0;
-        #8.68 rx = 1'b1;
+        axil_wdata = 32'd65;
+        axil_wstrb = 4'b0001;
+        axil_waddr = 12'd0;
+        axil_wready = 1'b1;
+        axil_rreq = 1'b0;
+        axil_raddr = 12'd0;
+        error = 1'b0;
+        #0.025 axil_wready = 1'b0;
+        #0.04 axil_wdata = 32'd67;
+        axil_waddr = 12'd2399;
+        axil_wready = 1'b1;
+        #0.04 axil_wready = 1'b0;
         // wait for the start of the next frame and then the first white pixel
-        #17000 wait(pmod[7:0] == 8'hFF);
+        #17546.75 wait(pmod[7:0] == 8'hFF);
         // next pixel of the character 'A' is at next line -1 pixel, so (800 horizontal cycles -1)*0.04 clk = 31.96, add 0.01 to have time to change output
         #31.97 if (pmod[7:0] != 8'hFF) begin
             $display("ERROR 1");
@@ -275,9 +222,10 @@ module tb_top;
         end
     end
         
-    top dut_top( .clk_i(clk), .rx_i(rx), .PMOD(pmod));
+    top dut_top( .clk_i(clk), .PMOD(pmod), .axil_wdata_i(axil_wdata), .axil_wstrb_i(axil_wstrb), .axil_waddr_i(axil_waddr), .axil_wready_i(axil_wready),
+.axil_rreq_i(axil_rreq), .axil_raddr_i(axil_raddr), .axil_rdata_o(axil_rdata));
 
     /* Make a regular pulsing clock. */
-    always #0.02 clk = !clk;
+    always #0.01 clk = !clk;
 
 endmodule // test

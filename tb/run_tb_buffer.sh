@@ -1,18 +1,17 @@
 #!/bin/bash
 
-iverilog -o tb_buffer.x tb_buffer.v ../rtl/buffer.v
 if [ -z "$1" ]
 then 
+    iverilog -o tb_buffer.x tb_buffer.v ../rtl/buffer.v
     ./tb_buffer.x
     rm tb_buffer.x
+    rm tb_buffer.vcd
 fi
 if [ "$1" == 'w' ]
 then
-    ./tb_buffer.x > foo.txt
-    rm foo.txt
-    rm tb_buffer.x
-    gtkwave tb_buffer.vcd signals_config/signals_buffer.gtkw
-    #rm tb_buffer.vcd
+    mkdir -p qsim_buffer
+    cd qsim_buffer
+    vsim -do ../qsim_config/buffer.do
 fi
 
 
