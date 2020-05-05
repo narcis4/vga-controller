@@ -26,10 +26,12 @@ module tb_vga_top;
         $finish;
     end
 
-    // this test sends a character 'A' to write and then checks that the corresponding pixels are white
+    // this test sends the characters 'A' and 'C' to write and then checks that the corresponding pixels of the screen are white
     initial begin
+        // signal initialization
         clk = 1'b0;
         error = 1'b0;
+        // send the address 0 for the first column and row of the screen and the data for the character 'A'
         axil_wdata = 32'd65;
         axil_wstrb = 4'b0001;
         axil_waddr = 12'd0;
@@ -38,6 +40,7 @@ module tb_vga_top;
         axil_raddr = 12'd0;
         error = 1'b0;
         #0.025 axil_wready = 1'b0;
+        // send the address of the last tile and the data for the character 'C'
         #0.04 axil_wdata = 32'd67;
         axil_waddr = 12'd2399;
         axil_wready = 1'b1;
@@ -138,8 +141,9 @@ module tb_vga_top;
             $display("ERROR 23");
             error = 1'b1;
         end
+        // check the white pixels for the character 'C'
         $display("Character C");
-        #10 wait(pmod[7:0] == 8'hFF); // character 'C'
+        #10 wait(pmod[7:0] == 8'hFF); 
         #0.05 if (pmod[7:0] != 8'hFF) begin
             $display("ERROR 1");
             error = 1'b1;

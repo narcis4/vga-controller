@@ -30,7 +30,7 @@ module tb_vga_fontMem;
         
     vga_fontMem dut_vga_fontMem( .clk_i(clk), .addr_i(addr), .dout_o(dout));
 
-    // this test reads all memory positions starting from 0
+    // this test reads all memory positions starting from 0 and checks that they are the same
     always @(posedge clk) begin
         #1 if (dout != expected[addr]) begin
             $display("Error at address %d", addr);

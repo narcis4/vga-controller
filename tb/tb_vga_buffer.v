@@ -53,9 +53,10 @@ module tb_vga_buffer;
     vga_buffer dut_vga_buffer( .clk_i(clk), .wr_en_i(wr_en), .w_addr_i(w_addr_i), .w_strb_i(w_strb_i), .r_addr_i(r_addr_i), .r_req_i(r_req_i), 
 .col_r_i(col_r), .row_r_i(row_r), .din_i(din), .dout_o(dout));
 
-    // this test does a initializationr read, writes every tile starting from bottom right with increasing numbers starting from 0, then reads 
+    // this test does a initialization read, writes every tile starting from bottom right with increasing numbers starting from 0, then reads 
     // all the tiles starting from top left and finally performs writes with write strobes
     always @(posedge clk) begin
+        // initialization read
         #1 if (!ini_read_done) begin
             if (col_r == 7'd0 && row_r == 5'd0) begin
                 write_delay = 1'b1;
@@ -76,6 +77,7 @@ module tb_vga_buffer;
                 row_r <= 5'd0;
                 col_r <= 7'd0;
             end
+            // full write
             if (write_delay) begin
                 if (w_addr_i == 12'd0) begin
                     $display("Doing full write...");
@@ -92,6 +94,7 @@ module tb_vga_buffer;
                 end
             end
         end
+        // full read
         else if (!finish) begin
             if (write_done) begin
                 if (col_r == 7'd0 && row_r == 5'd0) begin
@@ -116,6 +119,7 @@ module tb_vga_buffer;
         end
     end 
 
+    // Write using strobes
     initial begin
         wait(finish);
         #5 $display("Doing write with strobes...");
