@@ -39,8 +39,13 @@
 // under the License.
 //
 ////////////////////////////////////////////////////////////////////////////////
-// Modified by: Narcis Rodas narcis.rodaquiroga@bsc.es
-////////////////////////////////////////////////////////////////////////////////
+/* -----------------------------------------------
+ * Project Name   : DRAC
+ * File           : AXI_VGA.v
+ * Organization   : Barcelona Supercomputing Center
+ * Modified by    : Narcis Rodas
+ * Email(s)       : narcis.rodaquiroga@bsc.es
+ */
 // }}}
 //
 `default_nettype none
@@ -116,7 +121,7 @@ module AXI_VGA #(
     //
 	// Write signaling
     //
-	reg	axil_awready;
+	reg	axil_awready; // Same as AWREADY
     
     // Control of write ready, determines when the VGA is ready to accept a write transaction
 	initial	axil_awready = 1'b0;
@@ -155,7 +160,7 @@ module AXI_VGA #(
     //
 	// Read signaling
     //
-	reg	axil_arready;
+	reg	axil_arready; // Same as ARREADY
 
 	always @(*) axil_arready = !S_AXI_RVALID;
 

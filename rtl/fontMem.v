@@ -1,3 +1,11 @@
+/* -----------------------------------------------
+ * Project Name   : DRAC
+ * File           : AXI_VGA.v
+ * Organization   : Barcelona Supercomputing Center
+ * Modified by    : Narcis Rodas
+ * Email(s)       : narcis.rodaquiroga@bsc.es
+ */
+
 `default_nettype none
 
 // Memory map of the representation of the 128 ASCII characters in 8x16 pixels

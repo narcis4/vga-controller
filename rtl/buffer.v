@@ -1,3 +1,11 @@
+/* -----------------------------------------------
+ * Project Name   : DRAC
+ * File           : AXI_VGA.v
+ * Organization   : Barcelona Supercomputing Center
+ * Author         : Narcis Rodas
+ * Email(s)       : narcis.rodaquiroga@bsc.es
+ */
+
 `default_nettype none
 
 // Screen buffer divided in 80x30 tiles, each containing the 7 bit address of a character

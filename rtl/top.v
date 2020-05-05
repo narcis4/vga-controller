@@ -1,3 +1,11 @@
+/* -----------------------------------------------
+ * Project Name   : DRAC
+ * File           : AXI_VGA.v
+ * Organization   : Barcelona Supercomputing Center
+ * Modified by    : Narcis Rodas
+ * Email(s)       : narcis.rodaquiroga@bsc.es
+ */
+
 `default_nettype none
 
 // Top module, instantiates and wires other modules, defines background and character color, adjusts current pixel positions
@@ -93,7 +101,8 @@ module top #(
     end
     assign  rstn = bf2_rstn;*/
     
-    reg clk25 = 1'b0;
+    reg clk25 = 1'b0; // 25 Mhz clock
+    // Divide the 50 Mhz clock to generate the 25 Mhz one
     always @(posedge clk_i) begin
         clk25 <= ~clk25;
     end
@@ -139,7 +148,7 @@ module top #(
 
     assign current_col = hmem[N_PIXEL_WIDTH-1:C_ADDR_WIDTH]; 
     assign current_row = vmem[N_PIXEL_WIDTH-1:C_ADDR_HEIGHT]; 
-    //x_img and y_img are used to index within the look up
+    // x_img and y_img are used to index within the look up
     wire [C_ADDR_WIDTH-1:0]  x_img; // indicate X position inside the tile (0-7)
     wire [C_ADDR_HEIGHT-1:0] y_img; // inidicate Y position inside the tile (0-15)
     // similar as hmem, we need to load the pixel 1 cycle earlier, so we adjust the fetch to be 1 ahead
@@ -151,7 +160,8 @@ module top #(
     wire [0:C_WIDTH-1]                     char;      // bitmap of 1 row of a character
     wire [N_CHARS_WIDTH+C_ADDR_HEIGHT-1:0] font_in;   // address for access to the font memory, concatenation of char address and row
 
-    reg wr_ena = 1'b0;
+    reg wr_ena = 1'b0; // Write enable for the buffer
+    // Delay the write enable 1 cycle to sync with the 25 Mhz clock of the buffer
     always @(posedge clk_i) begin
         wr_ena <= axil_wready_i;
     end
