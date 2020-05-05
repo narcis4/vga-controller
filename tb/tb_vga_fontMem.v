@@ -1,7 +1,7 @@
 `default_nettype none
 `timescale 1ns/1ns
 
-module tb_fontMem;
+module tb_vga_fontMem;
 
     reg clk;
     reg [10:0] addr;
@@ -10,8 +10,8 @@ module tb_fontMem;
     reg error;
 
     initial begin
-        $dumpfile("tb_fontMem.vcd");
-        $dumpvars(0, tb_fontMem);
+        $dumpfile("tb_vga_fontMem.vcd");
+        $dumpvars(0, tb_vga_fontMem);
         wait(addr == 11'd2047); // last character address
         if (error == 1'b0) $display("PASS");
         $finish;
@@ -28,7 +28,7 @@ module tb_fontMem;
 `endif
     end
         
-    fontMem dut_fontMem( .clk_i(clk), .addr_i(addr), .dout_o(dout));
+    vga_fontMem dut_vga_fontMem( .clk_i(clk), .addr_i(addr), .dout_o(dout));
 
     // this test reads all memory positions starting from 0
     always @(posedge clk) begin

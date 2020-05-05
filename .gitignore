@@ -3,8 +3,8 @@
 /rtl/database
 /rtl/tasks
 *.x
-/tb/AXI_VGA_prfreg
-/tb/qsim_AXI_VGA
-/tb/qsim_buffer
-/tb/qsim_top
-/tb/qsim_fontMem
+/tb/axi_vga_prfreg
+/tb/qsim_axi_vga
+/tb/qsim_vga_buffer
+/tb/qsim_vga_top
+/tb/qsim_vga_fontMem

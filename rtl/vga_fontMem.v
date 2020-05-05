@@ -1,6 +1,6 @@
 /* -----------------------------------------------
  * Project Name   : DRAC
- * File           : AXI_VGA.v
+ * File           : vga_fontMem.v
  * Organization   : Barcelona Supercomputing Center
  * Modified by    : Narcis Rodas
  * Email(s)       : narcis.rodaquiroga@bsc.es
@@ -9,7 +9,7 @@
 `default_nettype none
 
 // Memory map of the representation of the 128 ASCII characters in 8x16 pixels
-module fontMem 
+module vga_fontMem 
 #(
 `ifdef FORMAL
     parameter FONT_FILE = "../../../rtl/char_bitmap/charmem_8b_data.list",

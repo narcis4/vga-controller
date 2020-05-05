@@ -20,7 +20,7 @@
 //////////////////////////////////////////////////////////////////////////////////
 /* -----------------------------------------------
  * Project Name   : DRAC
- * File           : AXI_VGA.v
+ * File           : vga_syncGen.v
  * Organization   : Barcelona Supercomputing Center
  * Modified by    : Narcis Rodas
  * Email(s)       : narcis.rodaquiroga@bsc.es
@@ -29,7 +29,7 @@
 `default_nettype none
 
 // Generation of the VGA sync signals, the position of the current pixel, the horizontal and vertical counters of the screen and the activevideo signal
-module VGAsyncGen (
+module vga_syncGen (
             input wire       clk_i,           // Input clock: 25MHz
             output wire      hsync_o,         // Horizontal sync out
             output wire      vsync_o,         // Vertical sync out
@@ -86,7 +86,7 @@ module VGAsyncGen (
     // Generate sync pulses (active low) and active video.
     assign hsync_o = (hc_o >= HFP && hc_o < HFP + H_PULSE) ? 0:1; // The sync pulses are active low and activate between their respective porches
     assign vsync_o = (vc_o >= VFP && vc_o < VFP + V_PULSE) ? 0:1;
-    assign activevideo_o = (hc_o >= BLACK_H -1 && vc_o >= BLACK_V) ? 1:0; // we generate activevideo 1 pixel before horizontally due to register delay (see top.v)
+    assign activevideo_o = (hc_o >= BLACK_H -1 && vc_o >= BLACK_V) ? 1:0; // we generate activevideo 1 pixel before horizontally due to register delay (see vga_top.v)
 
     // Track current pixel position
     always @(posedge clk_i)

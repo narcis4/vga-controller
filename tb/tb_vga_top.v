@@ -1,6 +1,6 @@
 `timescale 1us/1ns
 
-module tb_top;
+module tb_vga_top;
 
     localparam	C_AXI_ADDR_WIDTH = $clog2(2400);
 	localparam	C_AXI_DATA_WIDTH = 32;
@@ -20,8 +20,8 @@ module tb_top;
     reg error;
 
     initial begin
-        $dumpfile("tb_top.vcd");
-        $dumpvars(0, tb_top);
+        $dumpfile("tb_vga_top.vcd");
+        $dumpvars(0, tb_vga_top);
         #40000 if (error == 1'b0) $display("PASS");
         $finish;
     end
@@ -222,7 +222,7 @@ module tb_top;
         end
     end
         
-    top dut_top( .clk_i(clk), .PMOD(pmod), .axil_wdata_i(axil_wdata), .axil_wstrb_i(axil_wstrb), .axil_waddr_i(axil_waddr), .axil_wready_i(axil_wready),
+    vga_top dut_vga_top( .clk_i(clk), .PMOD(pmod), .axil_wdata_i(axil_wdata), .axil_wstrb_i(axil_wstrb), .axil_waddr_i(axil_waddr), .axil_wready_i(axil_wready),
 .axil_rreq_i(axil_rreq), .axil_raddr_i(axil_raddr), .axil_rdata_o(axil_rdata));
 
     /* Make a regular pulsing clock. */

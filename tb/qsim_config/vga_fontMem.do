@@ -1,15 +1,15 @@
 vlib work
-vlog +define+WAVE +acc "../../rtl/fontMem.v"
-vlog +define+WAVE +acc "../tb_fontMem.v"
-vsim work.tb_fontMem
+vlog +define+WAVE +acc "../../rtl/vga_fontMem.v"
+vlog +define+WAVE +acc "../tb_vga_fontMem.v"
+vsim work.tb_vga_fontMem
 onerror {resume}
 quietly WaveActivateNextPane {} 0
-add wave -noupdate /tb_fontMem/clk
-add wave -noupdate /tb_fontMem/error
-add wave -noupdate -radix decimal /tb_fontMem/addr
-add wave -noupdate -radix hexadecimal /tb_fontMem/dout
-add wave -noupdate -radix hexadecimal /tb_fontMem/expected
-add wave -noupdate /tb_fontMem/dut_fontMem/mem
+add wave -noupdate /tb_vga_fontMem/clk
+add wave -noupdate /tb_vga_fontMem/error
+add wave -noupdate -radix decimal /tb_vga_fontMem/addr
+add wave -noupdate -radix hexadecimal /tb_vga_fontMem/dout
+add wave -noupdate -radix hexadecimal /tb_vga_fontMem/expected
+add wave -noupdate /tb_vga_fontMem/dut_vga_fontMem/mem
 TreeUpdate [SetDefaultTree]
 WaveRestoreCursors {{Cursor 1} {0 ns} 0}
 quietly wave cursor active 0

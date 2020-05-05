@@ -1,7 +1,7 @@
 `default_nettype none
 `timescale 1ns/1ns
 
-module tb_AXI_VGA;
+module tb_axi_vga;
 
     localparam	C_AXI_ADDR_WIDTH = $clog2(2400);
 	localparam	C_AXI_DATA_WIDTH = 32;
@@ -47,8 +47,8 @@ module tb_AXI_VGA;
     reg [C_AXI_DATA_WIDTH-1:0] read_data2;
 
     initial begin
-        $dumpfile("tb_AXI_VGA.vcd");
-        $dumpvars(0, tb_AXI_VGA);
+        $dumpfile("tb_axi_vga.vcd");
+        $dumpvars(0, tb_axi_vga);
         #2000 if (error == 1'b0) $display("PASS");
         $finish;
     end
@@ -250,7 +250,7 @@ module tb_AXI_VGA;
         end   
     end
 
-    AXI_VGA dut_AXI_VGA (.S_AXI_ACLK(s_axi_aclk), 
+    axi_vga dut_axi_vga (.S_AXI_ACLK(s_axi_aclk), 
                          .S_AXI_ARESETN(s_axi_aresetn), 
                          .S_AXI_AWVALID(s_axi_awvalid), 
                          .S_AXI_AWREADY(s_axi_awready), 

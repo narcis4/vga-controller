@@ -1,7 +1,7 @@
 `default_nettype none
 `timescale 1ns/1ns
 
-module tb_buffer;
+module tb_vga_buffer;
 
     reg clk;
     reg wr_en;
@@ -23,8 +23,8 @@ module tb_buffer;
     reg error3;
 
     initial begin
-        $dumpfile("tb_buffer.vcd");
-        $dumpvars(0, tb_buffer);
+        $dumpfile("tb_vga_buffer.vcd");
+        $dumpvars(0, tb_vga_buffer);
         wait(fin);
         #10 if (error == 1'b0 && error2 == 1'b0 && error3 == 1'b0) $display("PASS");
         $finish;
@@ -50,7 +50,7 @@ module tb_buffer;
         fin = 1'b0;
     end
         
-    buffer dut_buffer( .clk_i(clk), .wr_en_i(wr_en), .w_addr_i(w_addr_i), .w_strb_i(w_strb_i), .r_addr_i(r_addr_i), .r_req_i(r_req_i), 
+    vga_buffer dut_vga_buffer( .clk_i(clk), .wr_en_i(wr_en), .w_addr_i(w_addr_i), .w_strb_i(w_strb_i), .r_addr_i(r_addr_i), .r_req_i(r_req_i), 
 .col_r_i(col_r), .row_r_i(row_r), .din_i(din), .dout_o(dout));
 
     // this test does a initializationr read, writes every tile starting from bottom right with increasing numbers starting from 0, then reads 

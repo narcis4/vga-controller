@@ -41,7 +41,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 /* -----------------------------------------------
  * Project Name   : DRAC
- * File           : AXI_VGA.v
+ * File           : axi_vga.v
  * Organization   : Barcelona Supercomputing Center
  * Modified by    : Narcis Rodas
  * Email(s)       : narcis.rodaquiroga@bsc.es
@@ -51,7 +51,7 @@
 `default_nettype none
 
 //The AXI-lite wrapper for interfacing with the VGA. The VGA can handle up to 1 AXI transaction every 2 bus cycles. 
-module AXI_VGA #(
+module axi_vga #(
 		// {{{
 		parameter	C_AXI_ADDR_WIDTH = $clog2(2400),     // Addr width based on the number of registers
 		parameter	C_AXI_DATA_WIDTH = 32,               // Width of the AXI-lite bus
@@ -193,7 +193,7 @@ module AXI_VGA #(
 	// Verilator lint_on  UNUSED
 
 `ifdef	FORMAL
-    top top_inst( .clk_i(S_AXI_ACLK), .PMOD(vga_o), .axil_wdata_i(wskd_data), .axil_wstrb_i(wskd_strb), .axil_waddr_i(awskd_addr), .axil_wready_i(axil_write_ready), 
+    vga_top vga_top_inst( .clk_i(S_AXI_ACLK), .PMOD(vga_o), .axil_wdata_i(wskd_data), .axil_wstrb_i(wskd_strb), .axil_waddr_i(awskd_addr), .axil_wready_i(axil_write_ready), 
 .axil_rreq_i(axil_read_req), .axil_raddr_i(arskd_addr), .axil_rdata_o(axil_read_data), .f_rdata_i(axil_read_data), .f_past_valid_i(f_past_valid), 
 .f_reset_i(S_AXI_ARESETN), .f_ready_i(axil_read_ready));
 	////////////////////////////////////////////////////////////////////////
@@ -220,7 +220,7 @@ module AXI_VGA #(
 					faxil_wr_outstanding,
 					faxil_awr_outstanding;
 
-	faxil_slave #(
+	faxil_vga_slave #(
 		// {{{
 		.C_AXI_DATA_WIDTH(C_AXI_DATA_WIDTH),
 		.C_AXI_ADDR_WIDTH(C_AXI_ADDR_WIDTH),
@@ -285,7 +285,7 @@ module AXI_VGA #(
 	end
 
 `else
-    top top_inst( .clk_i(S_AXI_ACLK), .PMOD(vga_o), .axil_wdata_i(wskd_data), .axil_wstrb_i(wskd_strb), .axil_waddr_i(awskd_addr), .axil_wready_i(axil_write_ready), 
+    vga_top vga_top_inst( .clk_i(S_AXI_ACLK), .PMOD(vga_o), .axil_wdata_i(wskd_data), .axil_wstrb_i(wskd_strb), .axil_waddr_i(awskd_addr), .axil_wready_i(axil_write_ready), 
 .axil_rreq_i(axil_read_req), .axil_raddr_i(arskd_addr), .axil_rdata_o(axil_read_data));
 `endif
 

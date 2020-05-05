@@ -1,6 +1,6 @@
 /* -----------------------------------------------
  * Project Name   : DRAC
- * File           : AXI_VGA.v
+ * File           : vga_top.v
  * Organization   : Barcelona Supercomputing Center
  * Modified by    : Narcis Rodas
  * Email(s)       : narcis.rodaquiroga@bsc.es
@@ -10,7 +10,7 @@
 
 // Top module, instantiates and wires other modules, defines background and character color, adjusts current pixel positions
 // and processes data from uart
-module top #(
+module vga_top #(
     parameter C_AXI_DATA_WIDTH = 32,                // Width of the AXI-lite bus
     parameter C_AXI_ADDR_WIDTH = $clog2(2400),      // AXI addr width based on the number of registers
     parameter ADDRLSB = $clog2(C_AXI_DATA_WIDTH)-3  // Least significant bits from address not used due to write strobes
@@ -116,7 +116,7 @@ module top #(
     wire [N_COUNTER_WIDTH-1:0] vc;  // vertical counter
     wire activevideo;               // 1 if displaying pixels, 0 otherwise
 
-    VGAsyncGen vga_inst( .clk_i(clk25), .hsync_o(HS), .vsync_o(VS), .x_px_o(x_px), .y_px_o(y_px), .hc_o(hc), .vc_o(vc), .activevideo_o(activevideo));
+    vga_syncGen vga_syncGen_inst( .clk_i(clk25), .hsync_o(HS), .vsync_o(VS), .x_px_o(x_px), .y_px_o(y_px), .hc_o(hc), .vc_o(vc), .activevideo_o(activevideo));
 
     //Internal registers for current pixel color
     reg [COLOR_WIDTH-1:0] R_int = 4'b0000;
@@ -167,17 +167,17 @@ module top #(
     end
 
 `ifdef FORMAL
-    buffer buf_inst( .clk_i(clk25), .wr_en_i(wr_ena), .w_addr_i(axil_waddr_i), .w_strb_i(axil_wstrb_i), .r_addr_i(axil_raddr_i), .r_req_i(axil_rreq_i), 
+    vga_buffer vga_buffer_inst( .clk_i(clk25), .wr_en_i(wr_ena), .w_addr_i(axil_waddr_i), .w_strb_i(axil_wstrb_i), .r_addr_i(axil_raddr_i), .r_req_i(axil_rreq_i), 
 .col_r_i(current_col), .row_r_i(current_row), .din_i(axil_wdata_i), .dout_o(char_addr), .r_data_o(axil_rdata_o), .f_rdata_i(f_rdata_i), 
 .f_past_valid_i(f_past_valid_i), .f_reset_i(f_reset_i), .f_ready_i(f_ready_i), .clk_axi_i(clk_i));
 `else
-    buffer buf_inst( .clk_i(clk25), .wr_en_i(wr_ena), .w_addr_i(axil_waddr_i), .w_strb_i(axil_wstrb_i), .r_addr_i(axil_raddr_i), .r_req_i(axil_rreq_i), 
+    vga_buffer vga_buffer_inst( .clk_i(clk25), .wr_en_i(wr_ena), .w_addr_i(axil_waddr_i), .w_strb_i(axil_wstrb_i), .r_addr_i(axil_raddr_i), .r_req_i(axil_rreq_i), 
 .col_r_i(current_col), .row_r_i(current_row), .din_i(axil_wdata_i), .dout_o(char_addr), .r_data_o(axil_rdata_o));
 `endif
     
     assign font_in = {char_addr, y_img};
 
-    fontMem fmem_inst( .clk_i(clk25), .addr_i(font_in), .dout_o(char));
+    vga_fontMem vga_fontMem_inst( .clk_i(clk25), .addr_i(font_in), .dout_o(char));
 
     //Update next pixel color
     //always @(posedge clk_i, negedge rstn) begin

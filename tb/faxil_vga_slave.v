@@ -33,7 +33,7 @@
 //
 `default_nettype	none
 //
-module faxil_slave #(
+module faxil_vga_slave #(
 	parameter  C_AXI_DATA_WIDTH	= 32,// Fixed, width of the AXI R&W data
 	parameter  C_AXI_ADDR_WIDTH	= 28,// AXI Address width (log wordsize)
 	// F_OPT_XILINX, Certain Xilinx cores impose additional rules upon AXI
