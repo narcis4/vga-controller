@@ -22,9 +22,9 @@ module tb_vga_fontMem;
         addr = 11'd0;
         error = 1'b0;
 `ifdef WAVE
-        $readmemb("../../rtl/char_bitmap/charmem_8b_data.list", expected);
+        $readmemb("../../includes/char_bitmap/charmem_8b_data.list", expected);
 `else
-        $readmemb("../rtl/char_bitmap/charmem_8b_data.list", expected);
+        $readmemb("../includes/char_bitmap/charmem_8b_data.list", expected);
 `endif
     end
         

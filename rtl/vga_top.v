@@ -167,12 +167,14 @@ module vga_top #(
     end
 
 `ifdef FORMAL
-    vga_buffer vga_buffer_inst( .clk_i(clk25), .wr_en_i(wr_ena), .w_addr_i(axil_waddr_i), .w_strb_i(axil_wstrb_i), .r_addr_i(axil_raddr_i), .r_req_i(axil_rreq_i), 
-.col_r_i(current_col), .row_r_i(current_row), .din_i(axil_wdata_i), .dout_o(char_addr), .r_data_o(axil_rdata_o), .f_rdata_i(f_rdata_i), 
-.f_past_valid_i(f_past_valid_i), .f_reset_i(f_reset_i), .f_ready_i(f_ready_i), .clk_axi_i(clk_i));
+    vga_buffer #(.C_AXI_ADDR_WIDTH(C_AXI_ADDR_WIDTH), .C_AXI_DATA_WIDTH(C_AXI_DATA_WIDTH))
+    vga_buffer_inst( .clk_i(clk25), .wr_en_i(wr_ena), .w_addr_i(axil_waddr_i), .w_strb_i(axil_wstrb_i), .r_addr_i(axil_raddr_i), .r_req_i(axil_rreq_i), 
+    .col_r_i(current_col), .row_r_i(current_row), .din_i(axil_wdata_i), .dout_o(char_addr), .r_data_o(axil_rdata_o), .f_rdata_i(f_rdata_i), 
+    .f_past_valid_i(f_past_valid_i), .f_reset_i(f_reset_i), .f_ready_i(f_ready_i), .clk_axi_i(clk_i));
 `else
-    vga_buffer vga_buffer_inst( .clk_i(clk25), .wr_en_i(wr_ena), .w_addr_i(axil_waddr_i), .w_strb_i(axil_wstrb_i), .r_addr_i(axil_raddr_i), .r_req_i(axil_rreq_i), 
-.col_r_i(current_col), .row_r_i(current_row), .din_i(axil_wdata_i), .dout_o(char_addr), .r_data_o(axil_rdata_o));
+    vga_buffer #(.C_AXI_ADDR_WIDTH(C_AXI_ADDR_WIDTH), .C_AXI_DATA_WIDTH(C_AXI_DATA_WIDTH))
+    vga_buffer_inst( .clk_i(clk25), .wr_en_i(wr_ena), .w_addr_i(axil_waddr_i), .w_strb_i(axil_wstrb_i), .r_addr_i(axil_raddr_i), .r_req_i(axil_rreq_i), 
+    .col_r_i(current_col), .row_r_i(current_row), .din_i(axil_wdata_i), .dout_o(char_addr), .r_data_o(axil_rdata_o));
 `endif
     
     assign font_in = {char_addr, y_img};
