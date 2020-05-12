@@ -57,10 +57,10 @@ module vga_syncGen (
     // Initial values.
     initial
     begin
-      x_px_o <= 0;
-      y_px_o <= 0;
-      hc_o <= 0;
-      vc_o <= 0;
+      x_px_o = 0;
+      y_px_o = 0;
+      hc_o = 0;
+      vc_o = 0;
     end
 
     // Update counters
