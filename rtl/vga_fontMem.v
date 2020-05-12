@@ -15,6 +15,8 @@ module vga_fontMem
     parameter FONT_FILE = "../../../includes/char_bitmap/charmem_8b_data.list",
 `elsif WAVE
     parameter FONT_FILE = "../../includes/char_bitmap/charmem_8b_data.list",
+`elsif VERILATOR
+    parameter FONT_FILE = "../soc/submodules/asic_top/submodules/processor/submodules/tile/submodules/vga/includes/char_bitmap/charmem_8b_data.list",
 `else
     parameter FONT_FILE = "../includes/char_bitmap/charmem_8b_data.list", // bitmap of the characters sorted by ASCII code
 `endif
