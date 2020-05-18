@@ -53,11 +53,11 @@
 //The AXI-lite wrapper for interfacing with the VGA. The VGA can handle up to 1 AXI transaction every 2 bus cycles. 
 module axi_vga #(
 		// {{{
-		parameter	C_AXI_ADDR_WIDTH = $clog2(2400),     // Addr width based on the number of registers
+		parameter	C_AXI_ADDR_WIDTH = 13,               // Addr width based on the number of registers
 		parameter	C_AXI_DATA_WIDTH = 32,               // Width of the AXI-lite bus
 		parameter [0:0]	OPT_SKIDBUFFER = 1'b0,           // This determines if we want to use more logic to achieve 1 transaction per bus cycle
 		parameter [0:0]	OPT_LOWPOWER = 0,                // Lowpower option to disable channels if inactive
-		parameter	ADDRLSB = $clog2(C_AXI_DATA_WIDTH)-3 // Least significant bits from address not used due to write strobes
+		parameter	ADDRLSB = $clog2(C_AXI_DATA_WIDTH)-3 // Least significant bits from address not used
 		// }}}
 	) (
 		// {{{

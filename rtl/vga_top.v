@@ -12,7 +12,7 @@
 // and processes data from uart
 module vga_top #(
     parameter C_AXI_DATA_WIDTH = 32,                // Width of the AXI-lite bus
-    parameter C_AXI_ADDR_WIDTH = $clog2(2400),      // AXI addr width based on the number of registers
+    parameter C_AXI_ADDR_WIDTH = 13,               // AXI addr width based on the number of registers
     parameter ADDRLSB = $clog2(C_AXI_DATA_WIDTH)-3  // Least significant bits from address not used due to write strobes
 )
 (
@@ -55,6 +55,7 @@ module vga_top #(
     localparam COLOR_1 = 4'b1111; // white characters
     localparam N_ROW_WIDTH = 5;
     localparam N_COL_WIDTH = 7;
+    localparam N_TOT_WIDTH = N_ROW_WIDTH + N_COL_WIDTH;
     localparam N_CHARS_WIDTH = 7;
     localparam H_PIXELS = 800;
     localparam V_PIXELS = 525;
@@ -62,6 +63,8 @@ module vga_top #(
     localparam V_BLACK = V_PIXELS - V_HEIGHT;
     localparam C_ADDR_WIDTH = 3;
     localparam C_ADDR_HEIGHT = 4;
+    localparam ROM_ADDR_WIDTH = 11;
+    localparam BUF_ADDR_WIDTH = 10;
 
 //--------------------
 //IO pins assigments
@@ -156,30 +159,60 @@ module vga_top #(
     // update y_img 1 cycle before to fetch the proper line in font memory
     assign y_img = (hc == H_BLACK-1) ? vmem[C_ADDR_HEIGHT-1:0] : y_px[C_ADDR_HEIGHT-1:0];
 
-    wire [N_CHARS_WIDTH-1:0]               char_addr; // address of the char in the bitmap, ASCII code
+    wire [N_CHARS_WIDTH*4-1:0]             char_addr; // address of the char in the bitmap, ASCII code
     wire [0:C_WIDTH-1]                     char;      // bitmap of 1 row of a character
     wire [N_CHARS_WIDTH+C_ADDR_HEIGHT-1:0] font_in;   // address for access to the font memory, concatenation of char address and row
 
     reg wr_ena = 1'b0; // Write enable for the buffer
     // Delay the write enable 1 cycle to sync with the 25 Mhz clock of the buffer
-    always @(posedge clk_i) begin
-        wr_ena <= axil_wready_i;
+    always @(posedge clk_i) begin;
+        wr_ena <= (axil_wready_i & axil_waddr_i[C_AXI_ADDR_WIDTH-1]) && axil_waddr_i < 13'd6496;
     end
+
+    wire [N_TOT_WIDTH-1:0] r_tile;
+    wire [BUF_ADDR_WIDTH-1:0] vr_addr_buffer;
+    wire [BUF_ADDR_WIDTH-1:0] w_addr_buffer;
+    wire [N_CHARS_WIDTH*4-1:0] w_data_buffer;
+    wire [BUF_ADDR_WIDTH-1:0] r_addr_buffer;
+    wire [N_CHARS_WIDTH*4-1:0] r_data_buffer;
+    assign r_tile = current_row * N_COL + current_col;
+    assign vr_addr_buffer = r_tile[N_TOT_WIDTH-1:ADDRLSB];
+    assign w_addr_buffer = axil_waddr_i[C_AXI_ADDR_WIDTH-2:ADDRLSB];
+    assign w_data_buffer = {axil_wdata_i[C_AXI_DATA_WIDTH-2-:N_CHARS_WIDTH], axil_wdata_i[C_AXI_DATA_WIDTH-2-(N_CHARS_WIDTH+1)-:N_CHARS_WIDTH],
+           axil_wdata_i[C_AXI_DATA_WIDTH-2-(N_CHARS_WIDTH+1)*2-:N_CHARS_WIDTH], axil_wdata_i[C_AXI_DATA_WIDTH-2-(N_CHARS_WIDTH+1)*3-:N_CHARS_WIDTH]};
+    //wire [N_CHARS_WIDTH:0] a, b, c, d;
+    //{a, b, c, d} = axil_wdata_i;
+    //w_data_buffer = {a[N_CHARS_WIDTH-1:0], b[N_CHARS_WIDTH-1:0], c[N_CHARS_WIDTH-1:0], d[N_CHARS_WIDTH-1:0];
+    assign r_addr_buffer = axil_raddr_i[C_AXI_ADDR_WIDTH-2:ADDRLSB];
+    assign axil_rdata_o = {1'b0, r_data_buffer[N_CHARS_WIDTH*4-1-:N_CHARS_WIDTH], 1'b0, r_data_buffer[N_CHARS_WIDTH*3-1-:N_CHARS_WIDTH],
+           1'b0, r_data_buffer[N_CHARS_WIDTH*2-1-:N_CHARS_WIDTH], 1'b0, r_data_buffer[N_CHARS_WIDTH-1:0]};
+
 
 `ifdef FORMAL
     vga_buffer #(.C_AXI_ADDR_WIDTH(C_AXI_ADDR_WIDTH), .C_AXI_DATA_WIDTH(C_AXI_DATA_WIDTH))
-    vga_buffer_inst( .clk_i(clk25), .wr_en_i(wr_ena), .w_addr_i(axil_waddr_i), .w_strb_i(axil_wstrb_i), .r_addr_i(axil_raddr_i), .r_req_i(axil_rreq_i), 
-    .col_r_i(current_col), .row_r_i(current_row), .din_i(axil_wdata_i), .dout_o(char_addr), .r_data_o(axil_rdata_o), .f_rdata_i(f_rdata_i), 
+    vga_buffer_inst( .clk_i(clk25), .wr_en_i(wr_ena), .w_addr_i(w_addr_buffer), .w_strb_i(axil_wstrb_i), .r_addr_i(r_addr_buffer), .r_req_i(axil_rreq_i), 
+    .vr_addr_i(vr_addr_buffer), .din_i(axil_wdata_i), .dout_o(char_addr), .r_data_o(r_data_buffer), .f_rdata_i(f_rdata_i), 
     .f_past_valid_i(f_past_valid_i), .f_reset_i(f_reset_i), .f_ready_i(f_ready_i), .clk_axi_i(clk_i));
 `else
     vga_buffer #(.C_AXI_ADDR_WIDTH(C_AXI_ADDR_WIDTH), .C_AXI_DATA_WIDTH(C_AXI_DATA_WIDTH))
-    vga_buffer_inst( .clk_i(clk25), .wr_en_i(wr_ena), .w_addr_i(axil_waddr_i), .w_strb_i(axil_wstrb_i), .r_addr_i(axil_raddr_i), .r_req_i(axil_rreq_i), 
-    .col_r_i(current_col), .row_r_i(current_row), .din_i(axil_wdata_i), .dout_o(char_addr), .r_data_o(axil_rdata_o));
+    vga_buffer_inst( .clk_i(clk25), .wr_en_i(wr_ena), .w_addr_i(w_addr_buffer), .w_strb_i(axil_wstrb_i), .r_addr_i(r_addr_buffer), .r_req_i(axil_rreq_i), 
+    .vr_addr_i(vr_addr_buffer), .din_i(w_data_buffer), .dout_o(char_addr), .r_data_o(r_data_buffer));
 `endif
     
-    assign font_in = {char_addr, y_img};
+    wire [ROM_ADDR_WIDTH-1:0] w_addr_rom;
+    reg wr_en_rom = 1'b0;
+    wire [0:C_WIDTH-1] w_data_rom;
+    wire [ADDRLSB-1:0] char_sel;
+    always @(posedge clk_i) begin
+        wr_en_rom <= axil_wready_i & (~axil_waddr_i[C_AXI_ADDR_WIDTH-1]);
+    end
 
-    vga_fontMem vga_fontMem_inst( .clk_i(clk25), .addr_i(font_in), .dout_o(char));
+    assign char_sel = r_tile[ADDRLSB-1:0];
+    assign w_addr_rom = axil_waddr_i[ROM_ADDR_WIDTH-1:0];
+    assign w_data_rom = axil_wdata_i[C_WIDTH-1:0];
+    assign font_in = {char_addr[char_sel], y_img};
+
+    vga_fontMem vga_fontMem_inst( .clk_i(clk25), .addr_i(font_in), .dout_o(char), .addr_w_i(w_addr_rom), .wr_en_i(wr_en_rom), .din_i(w_data_rom));
 
     //Update next pixel color
     //always @(posedge clk_i, negedge rstn) begin
