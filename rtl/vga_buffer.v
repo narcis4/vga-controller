@@ -64,7 +64,7 @@ module vga_buffer
         dout_o <= bmem[vr_addr_i]; 
         if (wr_en_i) begin
             for(k=0; k<C_AXI_DATA_WIDTH/8; k=k+1) begin
-			    if (w_strb_i[k]) bmem[w_addr_i] <= din_i[k*7+:6]; 
+			    if (w_strb_i[k]) bmem[w_addr_i][k*7+:7] <= din_i[k*7+:7];
 		    end
         end
     end
@@ -77,13 +77,15 @@ module vga_buffer
     end
 
 `ifdef FORMAL
+    wire [31:0] ref_data;
+    assign ref_data = {1'b0, bmem[r_addr_i][SINGLE_DATA*4-1:SINGLE_DATA*3], 1'b0, bmem[r_addr_i][SINGLE_DATA*3-1:SINGLE_DATA*2],
+               1'b0, bmem[r_addr_i][SINGLE_DATA*2-1:SINGLE_DATA], 1'b0, bmem[r_addr_i][SINGLE_DATA-1:0]};
     // Check that read data from a transaction matches the state of the registers 1 cycle earlier
     always @(posedge clk_axi_i)
 	if (f_past_valid_i && $past(f_reset_i
 			&& f_ready_i))
 	begin
-        assert(f_rdata_i == $past({1'b0, bmem[r_addr_i][SINGLE_DATA*4-1:SINGLE_DATA*3], 1'b0, bmem[r_addr_i][SINGLE_DATA*3-1:SINGLE_DATA*2],
-               1'b0, bmem[r_addr_i][SINGLE_DATA*2-1:SINGLE_DATA], 1'b0, bmem[r_addr_i][SINGLE_DATA-1:0]}));
+        assert(f_rdata_i == $past(ref_data));
 	end
 `endif
             

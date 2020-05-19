@@ -5,14 +5,13 @@ module tb_vga_buffer;
 
     reg clk;
     reg wr_en;
-    reg [12-1:0] w_addr_i;   
+    reg [10-1:0] w_addr_i;   
     reg [32/8-1:0] w_strb_i;
-    reg [12-1:0] r_addr_i;
+    reg [10-1:0] r_addr_i;
     reg r_req_i;
-    reg [6:0] col_r;
-    reg [4:0] row_r;
-    reg [31:0] din;  
-    wire [6:0] dout;
+    reg [9:0] vr_addr;
+    reg [28-1:0] din;  
+    wire [28-1:0] dout;
     reg write_done;
     reg ini_read_done;
     reg write_delay;
@@ -32,13 +31,12 @@ module tb_vga_buffer;
 
     initial begin
         clk = 1'b0;
-        w_addr_i = 12'd0;
-        w_strb_i = 4'b0001;
-        r_addr_i = 12'd0;
+        w_addr_i = 10'd0;
+        w_strb_i = 4'b0011;
+        r_addr_i = 10'd0;
         r_req_i = 1'b0;
-        col_r = 7'd0;
-        row_r = 5'd0;
-        din = 32'd0;
+        vr_addr = 10'd0;
+        din = 28'd0;
         wr_en = 1'b1;
         write_done = 1'b0;
         ini_read_done = 1'b0;
@@ -51,44 +49,39 @@ module tb_vga_buffer;
     end
         
     vga_buffer dut_vga_buffer( .clk_i(clk), .wr_en_i(wr_en), .w_addr_i(w_addr_i), .w_strb_i(w_strb_i), .r_addr_i(r_addr_i), .r_req_i(r_req_i), 
-.col_r_i(col_r), .row_r_i(row_r), .din_i(din), .dout_o(dout));
+.vr_addr_i(vr_addr), .din_i(din), .dout_o(dout));
 
     // this test does a initialization read, writes every tile starting from bottom right with increasing numbers starting from 0, then reads 
     // all the tiles starting from top left and finally performs writes with write strobes
     always @(posedge clk) begin
         // initialization read
         #1 if (!ini_read_done) begin
-            if (col_r == 7'd0 && row_r == 5'd0) begin
+            if (vr_addr == 10'd0) begin
                 write_delay = 1'b1;
                 $display("Doing initialization read...");
             end
-            if (dout != 7'd0) begin
-                $display("ERROR during initialization read at column %d row %d dout %d din %d", col_r, row_r, dout, din);
+            if (dout != 28'd0) begin
+                $display("ERROR during initialization read at addr %d dout %d din %d", vr_addr, dout, din);
                 error <= 1'b1;
             end
-            col_r <= col_r + 1;
-            if (col_r == 7'd79) begin
-                col_r <= 7'd0;
-                row_r <= row_r + 1;
-            end
-            if (row_r == 5'd29 && col_r == 7'd79) begin
+            vr_addr <= vr_addr + 1;
+            if (vr_addr == 10'd599) begin
                 if (error == 1'b0) $display("Initilization read OK");
                 ini_read_done <= 1'b1;
-                row_r <= 5'd0;
-                col_r <= 7'd0;
+                vr_addr <= 10'd0;
             end
             // full write
             if (write_delay) begin
-                if (w_addr_i == 12'd0) begin
+                if (w_addr_i == 10'd0) begin
                     $display("Doing full write...");
                 end
-                if (w_addr_i != 12'd2399) begin
+                if (w_addr_i != 10'd599) begin
                     din <= din + 1;
                     w_addr_i <= w_addr_i + 1;
                 end
                 else begin
                     write_done <= 1'b1;
-                    din <= 7'd0;
+                    din <= 28'd0;
                     wr_en <= 1'b0;
                     $display("Full write OK");
                 end
@@ -97,21 +90,17 @@ module tb_vga_buffer;
         // full read
         else if (!finish) begin
             if (write_done) begin
-                if (col_r == 7'd0 && row_r == 5'd0) begin
+                if (vr_addr == 10'd0) begin
                     $display("Doing final read...");
                     wr_en <= 1'b0;
                 end 
-                if (dout != din[6:0]) begin
-                    $display("ERROR during final read at column %d row %d dout %d din %d", col_r, row_r, dout, din);
+                if (dout != din) begin
+                    $display("ERROR during final read at address %d dout %d din %d", vr_addr, dout, din);
                     error2 <= 1'b1;
                 end
                 din <= din + 1;
-                col_r <= col_r + 1;
-                if (col_r == 7'd79) begin
-                    col_r <= 7'd0;
-                    row_r <= row_r + 1;
-                end
-                if (row_r == 5'd29 && col_r == 7'd79) begin
+                vr_addr <= vr_addr + 1;
+                if (vr_addr == 10'd599) begin
                     finish = 1'b1;
                     if (error2 == 1'b0) $display("Final read OK");
                 end
@@ -123,39 +112,30 @@ module tb_vga_buffer;
     initial begin
         wait(finish);
         #5 $display("Doing write with strobes...");
-        w_addr_i = 12'd4;
+        w_addr_i = 10'd4;
         w_strb_i = 4'b1111;
         wr_en = 1'b1;
-        din = 32'hBBBBBBBB;
-        #40 col_r = 7'd4;
-        row_r = 7'd0;
+        din = 28'hBBBBBBB; // 28'b1011101110111011101110111011
+        #40 vr_addr = 10'd4;
         wr_en = 1'b0;
-        #40 if (dout != 7'h3B) begin
-            $display("ERROR during write strobe full at column %d row %d dout %d", col_r, row_r, dout);
-            error3 = 1'b1;
-        end
-        col_r = 7'd5;
-        #40 if (dout != 7'h3B) begin
-            $display("ERROR during write strobe full at column %d row %d dout %d", col_r, row_r, dout);
-            error3 = 1'b1;
-        end
-        col_r = 7'd6;
-        #40 if (dout != 7'h3B) begin
-            $display("ERROR during write strobe full at column %d row %d dout %d", col_r, row_r, dout);
-            error3 = 1'b1;
-        end
-        col_r = 7'd7;
-        #40 if (dout != 7'h3B) begin
-            $display("ERROR during write strobe full at column %d row %d dout %d", col_r, row_r, dout);
+        #40 if (dout != 28'hBBBBBBB) begin
+            $display("ERROR during write strobe full at address %d dout %d", vr_addr, dout);
             error3 = 1'b1;
         end
         w_strb_i = 4'b0000;
         wr_en = 1'b1;
-        din = 32'h44444444;
-        #40 col_r = 7'd4;
-        wr_en = 1'b0;
-        #40 if (dout != 7'h3B) begin
-            $display("ERROR during write strobe 0 at column %d row %d dout %d", col_r, row_r, dout);
+        din = 28'h4444444;
+        #40 vr_addr = 10'd4;
+        #40 if (dout != 28'hBBBBBBB) begin
+            $display("ERROR during write strobe 0 at address %d dout %d", vr_addr, dout);
+            error3 = 1'b1;
+        end
+        w_strb_i = 4'b1010;
+        wr_en = 1'b1;
+        din = 28'b0001111000010000010000000011;
+        #40 vr_addr = 10'd4;
+        #40 if (dout != 28'b0001111110111000010000111011) begin
+            $display("ERROR during write strobe partial at address %d dout %d", vr_addr, dout);
             error3 = 1'b1;
         end
         #5 if (!error3) $display("Write strobes OK");

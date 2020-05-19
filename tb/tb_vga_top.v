@@ -2,7 +2,7 @@
 
 module tb_vga_top;
 
-    localparam	C_AXI_ADDR_WIDTH = $clog2(2400);
+    localparam	C_AXI_ADDR_WIDTH = 13;
 	localparam	C_AXI_DATA_WIDTH = 32;
 	localparam	ADDRLSB = $clog2(C_AXI_DATA_WIDTH)-3;
 
@@ -34,15 +34,15 @@ module tb_vga_top;
         // send the address 0 for the first column and row of the screen and the data for the character 'A'
         axil_wdata = 32'd65;
         axil_wstrb = 4'b0001;
-        axil_waddr = 12'd0;
+        axil_waddr = 13'h1000; // first buffer address
         axil_wready = 1'b1;
         axil_rreq = 1'b0;
-        axil_raddr = 12'd0;
+        axil_raddr = 13'd0;
         error = 1'b0;
         #0.025 axil_wready = 1'b0;
         // send the address of the last tile and the data for the character 'C'
         #0.04 axil_wdata = 32'd67;
-        axil_waddr = 12'd2399;
+        axil_waddr = 13'd6495; // 4096 + 2399
         axil_wready = 1'b1;
         #0.04 axil_wready = 1'b0;
         // wait for the start of the next frame and then the first white pixel
@@ -222,6 +222,40 @@ module tb_vga_top;
         end
         #0.04 if (pmod[7:0] != 8'hFF) begin
             $display("ERROR 20");
+            error = 1'b1;
+        end
+        #0.04 axil_wdata = 32'h000000FF;
+        axil_waddr = 13'h0000; // first rom memory address
+        axil_wready = 1'b1;
+        #0.04 axil_wready = 1'b0;
+        $display("ROM memory overwrite");
+        wait(pmod[7:0] == 8'hFF);
+        #0.04 if (pmod[7:0] != 8'hFF) begin
+            $display("ERROR 1");
+            error = 1'b1;
+        end
+        #0.04 if (pmod[7:0] != 8'hFF) begin
+            $display("ERROR 2");
+            error = 1'b1;
+        end
+        #0.04 if (pmod[7:0] != 8'hFF) begin
+            $display("ERROR 3");
+            error = 1'b1;
+        end
+        #0.04 if (pmod[7:0] != 8'hFF) begin
+            $display("ERROR 4");
+            error = 1'b1;
+        end
+        #0.04 if (pmod[7:0] != 8'hFF) begin
+            $display("ERROR 5");
+            error = 1'b1;
+        end
+        #0.04 if (pmod[7:0] != 8'hFF) begin
+            $display("ERROR 6");
+            error = 1'b1;
+        end
+        #0.04 if (pmod[7:0] != 8'hFF) begin
+            $display("ERROR 7");
             error = 1'b1;
         end
     end

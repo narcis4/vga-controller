@@ -165,7 +165,7 @@ module vga_top #(
 
     reg wr_ena = 1'b0; // Write enable for the buffer
     // Delay the write enable 1 cycle to sync with the 25 Mhz clock of the buffer
-    always @(posedge clk_i) begin;
+    always @(posedge clk_i) begin
         wr_ena <= (axil_wready_i & axil_waddr_i[C_AXI_ADDR_WIDTH-1]) && axil_waddr_i < 13'd6496;
     end
 
@@ -204,13 +204,13 @@ module vga_top #(
     wire [0:C_WIDTH-1] w_data_rom;
     wire [ADDRLSB-1:0] char_sel;
     always @(posedge clk_i) begin
-        wr_en_rom <= axil_wready_i & (~axil_waddr_i[C_AXI_ADDR_WIDTH-1]);
+        wr_en_rom <= axil_wready_i & (~axil_waddr_i[C_AXI_ADDR_WIDTH-1]) & axil_wstrb_i[0];
     end
 
     assign char_sel = r_tile[ADDRLSB-1:0];
     assign w_addr_rom = axil_waddr_i[ROM_ADDR_WIDTH-1:0];
     assign w_data_rom = axil_wdata_i[C_WIDTH-1:0];
-    assign font_in = {char_addr[char_sel], y_img};
+    assign font_in = {1'b0, char_addr[char_sel*7+:7], y_img};
 
     vga_fontMem vga_fontMem_inst( .clk_i(clk25), .addr_i(font_in), .dout_o(char), .addr_w_i(w_addr_rom), .wr_en_i(wr_en_rom), .din_i(w_data_rom));
 

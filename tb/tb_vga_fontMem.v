@@ -7,12 +7,18 @@ module tb_vga_fontMem;
     reg [10:0] addr;
     wire [0:7] dout;
     reg [0:7] expected [0:2047];
+    reg [10:0] addr_w;
+    reg wr_en;
+    reg [0:7] din;
     reg error;
+    reg read;
+    reg write_done;
+    reg finish;
 
     initial begin
         $dumpfile("tb_vga_fontMem.vcd");
         $dumpvars(0, tb_vga_fontMem);
-        wait(addr == 11'd2047); // last character address
+        wait(finish); // last character address
         if (error == 1'b0) $display("PASS");
         $finish;
     end
@@ -21,6 +27,12 @@ module tb_vga_fontMem;
         clk = 1'b0;
         addr = 11'd0;
         error = 1'b0;
+        addr_w = 11'd0;
+        wr_en = 1'b0;
+        din = 8'd0;
+        read = 1'b1;
+        write_done = 1'b0;
+        finish = 1'b0;
 `ifdef WAVE
         $readmemb("../../includes/char_bitmap/charmem_8b_data.list", expected);
 `else
@@ -28,15 +40,46 @@ module tb_vga_fontMem;
 `endif
     end
         
-    vga_fontMem dut_vga_fontMem( .clk_i(clk), .addr_i(addr), .dout_o(dout));
+    vga_fontMem dut_vga_fontMem( .clk_i(clk), .addr_i(addr), .dout_o(dout), .addr_w_i(addr_w), .wr_en_i(wr_en), .din_i(din));
 
     // this test reads all memory positions starting from 0 and checks that they are the same
     always @(posedge clk) begin
-        #1 if (dout != expected[addr]) begin
-            $display("Error at address %d", addr);
-            error <= 1'b1;
+        #1 if (read) begin
+            if (dout != expected[addr]) begin
+                $display("Error during initial read at address %d", addr);
+                error <= 1'b1;
+            end
+            addr <= addr + 1;
+            if (addr == 11'd2047) begin
+                read <= 1'b0;
+                wr_en <= 1'b1;
+                addr <= 11'd0;
+            end
         end
-        addr <= addr + 1;
+        else if (~write_done) begin
+            if (dout != 8'd0) begin
+                $display("Error during write at w_address %d, read address %d", addr_w, addr);
+                error <= 1'b1;
+            end
+            if (addr_w != 11'd2047) begin
+                din <= din + 1;
+                addr_w <= addr_w + 1;
+            end
+            else begin
+                write_done <= 1'b1;
+                din <= 8'd0;
+                wr_en <= 1'b0;
+            end
+        end
+        if (write_done) begin
+            if (dout != din) begin
+                $display("ERROR during final read at address %d dout %d din %d", addr, dout, din);
+                error <= 1'b1;
+            end
+            din <= din + 1;
+            addr <= addr + 1;
+            if (addr == 11'd2047) finish = 1'b1;    
+        end
     end 
 
     /* Make a regular pulsing clock. */
