@@ -9,10 +9,10 @@
 `default_nettype none
 
 // Top module, instantiates and wires other modules, defines background and character color, adjusts current pixel positions
-// and processes data from uart
+// and processes data from and to the AXI bus
 module vga_top #(
     parameter C_AXI_DATA_WIDTH = 32,                // Width of the AXI-lite bus
-    parameter C_AXI_ADDR_WIDTH = 13,               // AXI addr width based on the number of registers
+    parameter C_AXI_ADDR_WIDTH = 13,                // AXI addr width based on the number of registers
     parameter ADDRLSB = $clog2(C_AXI_DATA_WIDTH)-3  // Least significant bits from address not used due to write strobes
 )
 (
@@ -27,10 +27,10 @@ module vga_top #(
     output wire [15:0]                  PMOD,          // VGA PMOD
     input wire [C_AXI_DATA_WIDTH-1:0]   axil_wdata_i,  // AXI write data
     input wire [C_AXI_DATA_WIDTH/8-1:0] axil_wstrb_i,  // AXI write strobe
-    input wire [C_AXI_ADDR_WIDTH-1:0]   axil_waddr_i,  // AXI write address //input wire [C_AXI_ADDR_WIDTH-ADDRLSB-1:0] axil_waddr_i,
+    input wire [C_AXI_ADDR_WIDTH-1:0]   axil_waddr_i,  // AXI write address
     input wire                          axil_wready_i, // AXI address write ready
-    input wire                          axil_rreq_i,   // Determines whenthe VGA reads from the registers
-    input wire [C_AXI_ADDR_WIDTH-1:0]   axil_raddr_i,  // AXI read address//input wire [C_AXI_ADDR_WIDTH-ADDRLSB-1:0] axil_raddr_i,
+    input wire                          axil_rreq_i,   // Determines when the VGA reads from the registers
+    input wire [C_AXI_ADDR_WIDTH-1:0]   axil_raddr_i,  // AXI read address
     output wire [C_AXI_DATA_WIDTH-1:0]  axil_rdata_o   // Data read from the registers
   );
 
@@ -159,31 +159,30 @@ module vga_top #(
     // update y_img 1 cycle before to fetch the proper line in font memory
     assign y_img = (hc == H_BLACK-1) ? vmem[C_ADDR_HEIGHT-1:0] : y_px[C_ADDR_HEIGHT-1:0];
 
-    wire [N_CHARS_WIDTH*4-1:0]             char_addr; // address of the char in the bitmap, ASCII code
+    wire [N_CHARS_WIDTH*4-1:0]             char_addr; // address of 4 characters in the bitmap, ASCII code
     wire [0:C_WIDTH-1]                     char;      // bitmap of 1 row of a character
-    wire [N_CHARS_WIDTH+C_ADDR_HEIGHT-1:0] font_in;   // address for access to the font memory, concatenation of char address and row
+    wire [N_CHARS_WIDTH+C_ADDR_HEIGHT-1:0] font_in;   // address for access to the font memory, concatenation of 1 character address and a row number
 
     reg wr_ena = 1'b0; // Write enable for the buffer
-    // Delay the write enable 1 cycle to sync with the 25 Mhz clock of the buffer
+    // Write to the buffer if we are ready and the address is in the buffer range (4069-6496)
     always @(posedge clk_i) begin
         wr_ena <= (axil_wready_i & axil_waddr_i[C_AXI_ADDR_WIDTH-1]) && axil_waddr_i < 13'd6496;
     end
 
-    wire [N_TOT_WIDTH-1:0] r_tile;
-    wire [BUF_ADDR_WIDTH-1:0] vr_addr_buffer;
-    wire [BUF_ADDR_WIDTH-1:0] w_addr_buffer;
-    wire [N_CHARS_WIDTH*4-1:0] w_data_buffer;
-    wire [BUF_ADDR_WIDTH-1:0] r_addr_buffer;
-    wire [N_CHARS_WIDTH*4-1:0] r_data_buffer;
+    wire [N_TOT_WIDTH-1:0] r_tile;            // number of the tile to be accessed
+    wire [BUF_ADDR_WIDTH-1:0] vr_addr_buffer; // vga address to read from the buffer
+    wire [BUF_ADDR_WIDTH-1:0] w_addr_buffer;  // write address to the buffer
+    wire [N_CHARS_WIDTH*4-1:0] w_data_buffer; // write data for the buffer
+    wire [BUF_ADDR_WIDTH-1:0] r_addr_buffer;  // AXI read address for the buffer
+    wire [N_CHARS_WIDTH*4-1:0] r_data_buffer; // AXI read data from the buffer
     assign r_tile = current_row * N_COL + current_col;
     assign vr_addr_buffer = r_tile[N_TOT_WIDTH-1:ADDRLSB];
     assign w_addr_buffer = axil_waddr_i[C_AXI_ADDR_WIDTH-2:ADDRLSB];
+    // select the least significant 7 bits from each group of 8 bits (discard the MSB from each byte)
     assign w_data_buffer = {axil_wdata_i[C_AXI_DATA_WIDTH-2-:N_CHARS_WIDTH], axil_wdata_i[C_AXI_DATA_WIDTH-2-(N_CHARS_WIDTH+1)-:N_CHARS_WIDTH],
            axil_wdata_i[C_AXI_DATA_WIDTH-2-(N_CHARS_WIDTH+1)*2-:N_CHARS_WIDTH], axil_wdata_i[C_AXI_DATA_WIDTH-2-(N_CHARS_WIDTH+1)*3-:N_CHARS_WIDTH]};
-    //wire [N_CHARS_WIDTH:0] a, b, c, d;
-    //{a, b, c, d} = axil_wdata_i;
-    //w_data_buffer = {a[N_CHARS_WIDTH-1:0], b[N_CHARS_WIDTH-1:0], c[N_CHARS_WIDTH-1:0], d[N_CHARS_WIDTH-1:0];
     assign r_addr_buffer = axil_raddr_i[C_AXI_ADDR_WIDTH-2:ADDRLSB];
+    // pad the data read with a 0 before each group of 7 bits
     assign axil_rdata_o = {1'b0, r_data_buffer[N_CHARS_WIDTH*4-1-:N_CHARS_WIDTH], 1'b0, r_data_buffer[N_CHARS_WIDTH*3-1-:N_CHARS_WIDTH],
            1'b0, r_data_buffer[N_CHARS_WIDTH*2-1-:N_CHARS_WIDTH], 1'b0, r_data_buffer[N_CHARS_WIDTH-1:0]};
 
@@ -199,17 +198,17 @@ module vga_top #(
     .vr_addr_i(vr_addr_buffer), .din_i(w_data_buffer), .dout_o(char_addr), .r_data_o(r_data_buffer));
 `endif
     
-    wire [ROM_ADDR_WIDTH-1:0] w_addr_rom;
-    reg wr_en_rom = 1'b0;
-    wire [0:C_WIDTH-1] w_data_rom;
-    wire [ADDRLSB-1:0] char_sel;
+    wire [ROM_ADDR_WIDTH-1:0] w_addr_rom; // write address to the bitmap memory
+    reg wr_en_rom = 1'b0;                 // write enable for the bitmap memory
+    wire [0:C_WIDTH-1] w_data_rom;        // write data to the bitmap memory
+    wire [ADDRLSB-1:0] char_sel;          // the specific character of the group of 4 to be read for the display
     always @(posedge clk_i) begin
         wr_en_rom <= axil_wready_i & (~axil_waddr_i[C_AXI_ADDR_WIDTH-1]) & axil_wstrb_i[0];
     end
 
     assign char_sel = r_tile[ADDRLSB-1:0];
-    assign w_addr_rom = axil_waddr_i[ROM_ADDR_WIDTH-1:0];
-    assign w_data_rom = axil_wdata_i[C_WIDTH-1:0];
+    assign w_addr_rom = axil_waddr_i[ROM_ADDR_WIDTH-1:0]; 
+    assign w_data_rom = axil_wdata_i[C_WIDTH-1:0]; // write only the least significant byte of the data
     assign font_in = {1'b0, char_addr[char_sel*7+:7], y_img};
 
     vga_fontMem vga_fontMem_inst( .clk_i(clk25), .addr_i(font_in), .dout_o(char), .addr_w_i(w_addr_rom), .wr_en_i(wr_en_rom), .din_i(w_data_rom));

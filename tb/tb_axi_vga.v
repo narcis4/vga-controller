@@ -78,7 +78,7 @@ module tb_axi_vga;
         read_data = 32'd0;
         read_data2 = 32'd0;
 
-        // first write, address 0, data 0xFFFFFFFF, strobe 1 (only writes the least significant register)
+        // first write, address buffer 0, data 0xFFFFFFFF, strobe 1 (only writes the least significant byte)
         #15 s_axi_awaddr = 13'h1000;
         s_axi_awvalid = 1'b1;
         s_axi_wdata = 32'hFFFFFFFF;
@@ -140,7 +140,7 @@ module tb_axi_vga;
             error = 1'b1;
         end
 
-        // second and third writes, address 2396 and 2398, data 0x99999999 and 0xE6E6E6E6, strobe F
+        // second and third writes, address buffer 2396 and 2398, data 0x99999999 and 0xE6E6E6E6, strobe 0xF for the first and 0x9 for the second
         #6 s_axi_awaddr = 13'd6492;
         s_axi_awvalid = 1'b1;
         s_axi_wdata = 32'h99999999;

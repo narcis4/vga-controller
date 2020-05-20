@@ -51,8 +51,8 @@ module tb_vga_buffer;
     vga_buffer dut_vga_buffer( .clk_i(clk), .wr_en_i(wr_en), .w_addr_i(w_addr_i), .w_strb_i(w_strb_i), .r_addr_i(r_addr_i), .r_req_i(r_req_i), 
 .vr_addr_i(vr_addr), .din_i(din), .dout_o(dout));
 
-    // this test does a initialization read, writes every tile starting from bottom right with increasing numbers starting from 0, then reads 
-    // all the tiles starting from top left and finally performs writes with write strobes
+    // this test does a initialization read, writes every tile in groups of 4 at the same time with increasing numbers starting from 0, then reads 
+    // all the tiles (also in groups of 4) and finally performs writes with various write strobes
     always @(posedge clk) begin
         // initialization read
         #1 if (!ini_read_done) begin

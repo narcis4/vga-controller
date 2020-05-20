@@ -18,7 +18,7 @@ module tb_vga_fontMem;
     initial begin
         $dumpfile("tb_vga_fontMem.vcd");
         $dumpvars(0, tb_vga_fontMem);
-        wait(finish); // last character address
+        wait(finish); 
         if (error == 1'b0) $display("PASS");
         $finish;
     end
@@ -42,7 +42,7 @@ module tb_vga_fontMem;
         
     vga_fontMem dut_vga_fontMem( .clk_i(clk), .addr_i(addr), .dout_o(dout), .addr_w_i(addr_w), .wr_en_i(wr_en), .din_i(din));
 
-    // this test reads all memory positions starting from 0 and checks that they are the same
+    // this test reads all memory positions starting from 0 and checks that they have the expected value, then does a full write and a full read
     always @(posedge clk) begin
         #1 if (read) begin
             if (dout != expected[addr]) begin

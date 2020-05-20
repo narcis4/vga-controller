@@ -4,7 +4,6 @@ module tb_vga_top;
 
     localparam	C_AXI_ADDR_WIDTH = 13;
 	localparam	C_AXI_DATA_WIDTH = 32;
-	localparam	ADDRLSB = $clog2(C_AXI_DATA_WIDTH)-3;
 
     reg                          clk;	       
     //reg RSTN_BUTTON, // rstn,
@@ -26,13 +25,14 @@ module tb_vga_top;
         $finish;
     end
 
-    // this test sends the characters 'A' and 'C' to write and then checks that the corresponding pixels of the screen are white
+    // this test sends the characters 'A' and 'C' to write, then checks that the corresponding pixels of the screen are white and lastly, overwrites the first row
+    // of pixels of the character 'A' and checks it
     initial begin
         // signal initialization
         clk = 1'b0;
         error = 1'b0;
         // send the address 0 for the first column and row of the screen and the data for the character 'A'
-        axil_wdata = 32'd65;
+        axil_wdata = 32'd65; // 'A' in ASCII
         axil_wstrb = 4'b0001;
         axil_waddr = 13'h1000; // first buffer address
         axil_wready = 1'b1;
@@ -41,7 +41,7 @@ module tb_vga_top;
         error = 1'b0;
         #0.025 axil_wready = 1'b0;
         // send the address of the last tile and the data for the character 'C'
-        #0.04 axil_wdata = 32'd67;
+        #0.04 axil_wdata = 32'd67; // 'C' in ASCII
         axil_waddr = 13'd6495; // 4096 + 2399
         axil_wready = 1'b1;
         #0.04 axil_wready = 1'b0;
@@ -224,12 +224,12 @@ module tb_vga_top;
             $display("ERROR 20");
             error = 1'b1;
         end
-        #0.04 axil_wdata = 32'h000000FF;
+        #0.04 axil_wdata = 32'h000000FF; // write all the pixels to 1
         axil_waddr = 13'h0000; // first rom memory address
         axil_wready = 1'b1;
         #0.04 axil_wready = 1'b0;
         $display("ROM memory overwrite");
-        wait(pmod[7:0] == 8'hFF);
+        wait(pmod[7:0] == 8'hFF); // wait for the next white pixel and check that the next 7 are also white
         #0.04 if (pmod[7:0] != 8'hFF) begin
             $display("ERROR 1");
             error = 1'b1;
