@@ -104,11 +104,13 @@ module vga_top #(
     end
     assign  rstn = bf2_rstn;*/
     
-    reg clk25 = 1'b0; // 25 Mhz clock
+    /*reg clk25 = 1'b0; // 25 Mhz clock
     // Divide the 50 Mhz clock to generate the 25 Mhz one
     always @(posedge clk_i) begin
         clk25 <= ~clk25;
-    end
+    end*/
+    wire clk25;
+    assign clk25 = clk_i;
 
 //--------------------
 // IP internal signals

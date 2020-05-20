@@ -20,19 +20,19 @@ module vga_fontMem
 `else
     parameter FONT_FILE = "../includes/char_bitmap/charmem_8b_data.list", // bitmap of the characters sorted by ASCII code
 `endif
-    parameter ADDR_WIDTH = 11, // log2(128 characters)
-    parameter DATA_WIDTH = 8   // 8x16 pixels per character
+    parameter ADDR_WIDTH = 11, // log2(128 characters x 16 rows each)
+    parameter DATA_WIDTH = 8   // 8 bits per row
 )
 (
-    input wire                  clk_i,  // 25MHz clock
-    input wire [ADDR_WIDTH-1:0] addr_i, // address to be accessed, ASCII code of the character needed
-    output reg [0:DATA_WIDTH-1] dout_o,  // data output, 128 pixels that can be off (0) or on (1)
-    input wire [ADDR_WIDTH-1:0] addr_w_i, 
-    input wire                  wr_en_i,
-    input wire [0:DATA_WIDTH-1] din_i
+    input wire                  clk_i,    // 25MHz clock
+    input wire [ADDR_WIDTH-1:0] addr_i,   // address to be accessed, ASCII code of the character needed
+    output reg [0:DATA_WIDTH-1] dout_o,   // data output, 8 pixels that can be background (0) or character (1)
+    input wire [ADDR_WIDTH-1:0] addr_w_i, // write address
+    input wire                  wr_en_i,  // write enable
+    input wire [0:DATA_WIDTH-1] din_i     // data to write
 );
 
-    reg [0:DATA_WIDTH-1] mem [0:(1 << ADDR_WIDTH)-1]; // memory of the characters bitmap
+    reg [0:DATA_WIDTH-1] mem [0:(1 << ADDR_WIDTH)-1]; // single port memory of the characters bitmap
 
 //`ifdef WAVE
     // memory initialization
@@ -41,7 +41,7 @@ module vga_fontMem
     end
 //`endif
 
-    // output register controlled by clock
+    // write and read operations, if both happen in the same cycle, no data is read and the output is 0 (background)
     always @(posedge clk_i) begin
         if (wr_en_i) begin 
             mem[addr_w_i] <= din_i;

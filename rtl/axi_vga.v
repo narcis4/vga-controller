@@ -100,14 +100,14 @@ module axi_vga #(
 	wire i_reset = !S_AXI_ARESETN;
 
 	wire				            axil_write_ready; // Same as AWREADY
-	wire [C_AXI_ADDR_WIDTH-1:0]     awskd_addr;       // Same as AWADDR //wire [C_AXI_ADDR_WIDTH-ADDRLSB-1:0]	awskd_addr; 
+	wire [C_AXI_ADDR_WIDTH-1:0]     awskd_addr;       // Same as AWADDR 
 	//
 	wire [C_AXI_DATA_WIDTH-1:0]	    wskd_data;        // Same as WDATA
 	wire [C_AXI_DATA_WIDTH/8-1:0]   wskd_strb;        // Same as WSTRB
 	reg			                    axil_bvalid;      // Same as BVALID
 	//
 	wire				            axil_read_ready;  // The VGA is about to read the ARADDR
-	wire [C_AXI_ADDR_WIDTH-1:0]     arskd_addr;       // Same as ARADDR //wire [C_AXI_ADDR_WIDTH-ADDRLSB-1:0] arskd_addr;
+	wire [C_AXI_ADDR_WIDTH-1:0]     arskd_addr;       // Same as ARADDR
 	wire [C_AXI_DATA_WIDTH-1:0]	    axil_read_data;   // Same as RDATA
 	reg				                axil_read_valid;  // Same as RVALID
 
@@ -137,7 +137,7 @@ module axi_vga #(
 	assign	S_AXI_AWREADY = axil_awready;
 	assign	S_AXI_WREADY  = axil_awready;
 
-	assign 	awskd_addr = S_AXI_AWADDR[C_AXI_ADDR_WIDTH-1:0]; //assign 	awskd_addr = S_AXI_AWADDR[C_AXI_ADDR_WIDTH-1:ADDRLSB];
+	assign 	awskd_addr = S_AXI_AWADDR[C_AXI_ADDR_WIDTH-1:0];
 	assign	wskd_data  = S_AXI_WDATA;
 	assign	wskd_strb  = S_AXI_WSTRB;
 
@@ -164,7 +164,7 @@ module axi_vga #(
 
 	always @(*) axil_arready = !S_AXI_RVALID;
 
-	assign	arskd_addr = S_AXI_ARADDR[C_AXI_ADDR_WIDTH-1:0]; //assign	arskd_addr = S_AXI_ARADDR[C_AXI_ADDR_WIDTH-1:ADDRLSB];
+	assign	arskd_addr = S_AXI_ARADDR[C_AXI_ADDR_WIDTH-1:0]; 
 	assign	S_AXI_ARREADY = axil_arready;
 	assign	axil_read_ready = (S_AXI_ARVALID && S_AXI_ARREADY);
     
