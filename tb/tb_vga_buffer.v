@@ -32,7 +32,7 @@ module tb_vga_buffer;
     initial begin
         clk = 1'b0;
         w_addr_i = 10'd0;
-        w_strb_i = 4'b0011;
+        w_strb_i = 4'b1111;
         r_addr_i = 10'd0;
         r_req_i = 1'b0;
         vr_addr = 10'd0;

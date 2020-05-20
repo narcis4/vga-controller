@@ -17,7 +17,7 @@ add wave -noupdate -radix hexadecimal /tb_axi_vga/read_data
 add wave -noupdate -radix hexadecimal /tb_axi_vga/read_data2
 add wave -noupdate /tb_axi_vga/s_axi_awvalid
 add wave -noupdate /tb_axi_vga/s_axi_awready
-add wave -noupdate -radix decimal /tb_axi_vga/s_axi_awaddr
+add wave -noupdate -radix unsigned /tb_axi_vga/s_axi_awaddr
 add wave -noupdate /tb_axi_vga/s_axi_wvalid
 add wave -noupdate /tb_axi_vga/s_axi_wready
 add wave -noupdate -radix binary /tb_axi_vga/s_axi_wstrb
@@ -26,17 +26,18 @@ add wave -noupdate /tb_axi_vga/s_axi_bvalid
 add wave -noupdate /tb_axi_vga/s_axi_bready
 add wave -noupdate /tb_axi_vga/s_axi_arvalid
 add wave -noupdate /tb_axi_vga/s_axi_arready
-add wave -noupdate -radix decimal /tb_axi_vga/s_axi_araddr
+add wave -noupdate -radix unsigned /tb_axi_vga/s_axi_araddr
 add wave -noupdate /tb_axi_vga/s_axi_rvalid
 add wave -noupdate /tb_axi_vga/s_axi_rready
 add wave -noupdate /tb_axi_vga/s_axi_rdata
 add wave -noupdate /tb_axi_vga/dut_axi_vga/axil_read_req
 add wave -noupdate /tb_axi_vga/vga_o
 add wave -noupdate /tb_axi_vga/dut_axi_vga/vga_top_inst/wr_ena
-add wave -noupdate /tb_axi_vga/dut_axi_vga/vga_top_inst/vga_buffer_inst/bmem
+add wave -noupdate -radix binary /tb_axi_vga/dut_axi_vga/vga_top_inst/vga_buffer_inst/bmem
+add wave -noupdate /tb_axi_vga/dut_axi_vga/vga_top_inst/wr_en_rom
 add wave -noupdate /tb_axi_vga/dut_axi_vga/vga_top_inst/vga_fontMem_inst/mem
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {0 ns} 0}
+WaveRestoreCursors {{Cursor 1} {1078 ns} 0}
 quietly wave cursor active 1
 configure wave -namecolwidth 150
 configure wave -valuecolwidth 100
