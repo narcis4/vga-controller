@@ -122,7 +122,12 @@ module axi_vga #(
 	// Write signaling
     //
 	reg	axil_awready; // Same as AWREADY
-    
+
+    reg clk25 = 1'b0;
+    always @(posedge S_AXI_ACLK) begin
+        clk25 <= ~clk25;
+    end    
+
     // Control of write ready, determines when the VGA is ready to accept a write transaction
 	initial	axil_awready = 1'b0;
 	always @(posedge S_AXI_ACLK) begin
@@ -184,6 +189,13 @@ module axi_vga #(
 	assign	S_AXI_RVALID = axil_read_valid;
 	assign	S_AXI_RDATA  = axil_read_data;
 	assign	S_AXI_RRESP = 2'b00;
+
+    reg w_ready_reg = 1'b0;
+    always @(posedge S_AXI_ACLK) begin
+        w_ready_reg <= axil_write_ready;
+    end
+    wire wr_en;
+    assign wr_en = w_ready_reg | axil_write_ready;
 
 	// Verilator lint_off UNUSED
 	wire	unused;
@@ -287,7 +299,8 @@ module axi_vga #(
 
 `else
     vga_top #(.C_AXI_ADDR_WIDTH(C_AXI_ADDR_WIDTH), .C_AXI_DATA_WIDTH(C_AXI_DATA_WIDTH))
-    vga_top_inst(.clk_i(S_AXI_ACLK), .PMOD(vga_o), .axil_wdata_i(wskd_data), .axil_wstrb_i(wskd_strb), .axil_waddr_i(awskd_addr), .axil_wready_i(axil_write_ready), 
+    //vga_top_inst(.clk_i(S_AXI_ACLK), .PMOD(vga_o), .axil_wdata_i(wskd_data), .axil_wstrb_i(wskd_strb), .axil_waddr_i(awskd_addr), .axil_wready_i(axil_write_ready),
+    vga_top_inst(.clk_i(clk25), .PMOD(vga_o), .axil_wdata_i(wskd_data), .axil_wstrb_i(wskd_strb), .axil_waddr_i(awskd_addr), .axil_wready_i(wr_en), 
     .axil_rreq_i(axil_read_req), .axil_raddr_i(arskd_addr), .axil_rdata_o(axil_read_data));
 `endif
 

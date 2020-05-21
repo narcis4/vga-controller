@@ -264,6 +264,6 @@ module tb_vga_top;
 .axil_rreq_i(axil_rreq), .axil_raddr_i(axil_raddr), .axil_rdata_o(axil_rdata));
 
     /* Make a regular pulsing clock. */
-    always #0.01 clk = !clk;
+    always #0.02 clk = !clk;
 
 endmodule // test

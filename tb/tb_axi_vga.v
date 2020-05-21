@@ -40,9 +40,9 @@ module tb_axi_vga;
     
     reg                        error;
     reg                        write_end;
-    reg [3:0]                  write_timeout;
+    reg [4:0]                  write_timeout;
     reg                        read_end;
-    reg [3:0]                  read_timeout;
+    reg [4:0]                  read_timeout;
     reg [C_AXI_DATA_WIDTH-1:0] read_data;
     reg [C_AXI_DATA_WIDTH-1:0] read_data2;
 
@@ -108,17 +108,19 @@ module tb_axi_vga;
         end
         
         // first read, reads the address 0 to check the data written
-        #6 s_axi_araddr = 13'd0;
+        #46 s_axi_araddr = 13'd0;
         s_axi_arvalid = 1'b1;
         s_axi_rready = 1'b1;
-        #14 while (read_timeout < 10 && ~read_end) begin
-            if (s_axi_arready) begin
+        #20;
+        while (read_timeout < 10 && ~read_end) begin
+            /*if (s_axi_arready) begin
                 if (s_axi_rvalid) begin
                     #2 s_axi_arvalid = 1'b0;
                     s_axi_rready = 1'b0;
                     read_data = s_axi_rdata;
                 end
-                else #2 s_axi_arvalid = 1'b0;
+                //else #2 s_axi_arvalid = 1'b0;
+                //else #2 s_axi_awprot = 3'd0;
             end
             else begin
                 if (s_axi_rvalid) begin
@@ -126,10 +128,16 @@ module tb_axi_vga;
                     read_data = s_axi_rdata;
                 end
                 else #2 s_axi_awprot = 3'd0;
+            end*/
+            if (s_axi_rvalid) begin
+                #20 s_axi_arvalid = 1'b0;
+                s_axi_rready = 1'b0;
+                read_data = s_axi_rdata;
             end
+            else #20;
             if (~s_axi_arvalid && ~s_axi_rready) read_end = 1'b1;
             read_timeout = read_timeout + 1;
-            #18 s_axi_awprot = 3'd0;
+            s_axi_awprot = 3'd0;
         end
         if (~read_end) begin
             $display("Read timeout, AXI slave didn't put valid data for 10 cycles");
@@ -193,15 +201,15 @@ module tb_axi_vga;
         end
 
         // second and third reads, check the data written before 
-        #6 s_axi_araddr = 13'd6492;
+        #46 s_axi_araddr = 13'd6492;
         s_axi_arvalid = 1'b1;
         s_axi_rready = 1'b1;
         read_end = 1'b0;
         read_timeout = 4'd0;
         read_data = 32'h33333333;
-        #14 while (read_timeout < 16 && ~read_end) begin
+        #20 while (read_timeout < 16 && ~read_end) begin
             if (s_axi_araddr != 13'd6494 || read_data == 32'h33333333) begin
-                if (s_axi_arready) begin
+                /*if (s_axi_arready) begin
                     if (s_axi_rvalid) begin
                         #2 read_data = s_axi_rdata;
                         s_axi_araddr = 13'd6494;
@@ -213,12 +221,17 @@ module tb_axi_vga;
                         #2 read_data = s_axi_rdata;
                     end
                     else #2 s_axi_awprot = 3'd0;
+                end*/
+                if (s_axi_rvalid) begin
+                    #20 s_axi_araddr = 13'd6494;
+                    read_data = s_axi_rdata;
                 end
-                read_timeout = read_timeout + 1;
-                #18 s_axi_awprot = 3'd0;
+                else #20;
+                //#2 read_timeout = read_timeout + 1;
+                //#20 s_axi_awprot = 3'd0;
             end
             else begin
-                if (s_axi_arready) begin
+                /*if (s_axi_arready) begin
                     if (s_axi_rvalid) begin
                         #2 s_axi_arvalid = 1'b0;
                         s_axi_rready = 1'b0;
@@ -232,11 +245,18 @@ module tb_axi_vga;
                         read_data2 = s_axi_rdata;
                     end
                     else #2 s_axi_awprot = 3'd0;
+                end*/
+                if (s_axi_rvalid) begin
+                    #20 s_axi_arvalid = 1'b0;
+                    s_axi_rready = 1'b0;
+                    read_data2 = s_axi_rdata;
                 end
+                else #20;
                 if (~s_axi_arvalid && ~s_axi_rready) read_end = 1'b1;
-                read_timeout = read_timeout + 1;
-                #18 s_axi_awprot = 3'd0;
-            end         
+                //read_timeout = read_timeout + 1;
+                //#18 s_axi_awprot = 3'd0;
+            end
+            read_timeout = read_timeout + 1;         
         end
         if (~read_end) begin
             $display("Read 2 timeout, AXI slave didn't put 2 valid datas in 16 cycles");
