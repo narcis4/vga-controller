@@ -16,10 +16,10 @@ module vga_buffer
     parameter NUM_TILES = H_TILES*V_TILES,          // 80x30 = 2400
     parameter NUM_ADDRS = NUM_TILES/4,              // 2400/4 = 600
     parameter DATA_WIDTH = 28,                      // log2(128 possible characters)x4
-    parameter SINGLE_DATA = 7                       // log2(128)
+    parameter SINGLE_DATA = 7,                      // log2(128)
     parameter ADDR_WIDTH = 10,                      // log2(600)
     parameter C_AXI_DATA_WIDTH = 32,                // Width of the AXI-lite bus
-    parameter C_AXI_ADDR_WIDTH = 13,                // AXI addr width based on the number of registers
+    parameter C_AXI_ADDR_WIDTH = 13                 // AXI addr width based on the number of registers
 )
 (
 `ifdef FORMAL
