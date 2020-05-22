@@ -51,8 +51,9 @@ module vga_top #(
     localparam N_PIXEL_WIDTH = 10;
     localparam UART_DATA_WIDTH = 8;
     localparam COLOR_WIDTH = 4;
-    localparam COLOR_0 = 4'b0000; // black background
-    localparam COLOR_1 = 4'b1111; // white characters
+    localparam REG_ADDR_WIDTH = 5;
+    //localparam COLOR_0 = 4'b0000; // black background
+    //localparam COLOR_1 = 4'b1111; // white characters
     localparam N_ROW_WIDTH = 5;
     localparam N_COL_WIDTH = 7;
     localparam N_TOT_WIDTH = N_ROW_WIDTH + N_COL_WIDTH;
@@ -113,6 +114,7 @@ module vga_top #(
 //--------------------
 // IP internal signals
 //--------------------
+    
     wire [N_PIXEL_WIDTH-1:0] x_px;  // current X position of the pixel
     wire [N_PIXEL_WIDTH-1:0] y_px;  // current Y position of the pixel
     wire [N_COUNTER_WIDTH-1:0] hc;  // horizontal counter
@@ -138,6 +140,29 @@ module vga_top #(
     assign B1 = activevideo ? B_int[1] :0; 
     assign B2 = activevideo ? B_int[2] :0; 
     assign B3 = activevideo ? B_int[3] :0; 
+
+    reg [COLOR_WIDTH-1:0] red_color0 = 4'b0000;   // background color (black)
+    reg [COLOR_WIDTH-1:0] red_color1 = 4'b1111;   // character color (white)
+    reg [COLOR_WIDTH-1:0] blue_color0 = 4'b0000;  // background color (black)
+    reg [COLOR_WIDTH-1:0] blue_color1 = 4'b1111;  // character color (white)
+    reg [COLOR_WIDTH-1:0] green_color0 = 4'b0000; // background color (black)
+    reg [COLOR_WIDTH-1:0] green_color1 = 4'b1111; // character color (white)
+    reg wr_en_regs = 1'b0;
+    always @(posedge clk_i) begin
+        wr_en_regs <= axil_wready_i & (~axil_waddr_i[C_AXI_ADDR_WIDTH-1]) & axil_waddr_i[C_AXI_ADDR_WIDTH-2] & axil_wstrb_i[0];
+    end
+    always @(posedge clk_i) begin
+        if (wr_en_regs) begin
+            case(axil_waddr_i[REG_ADDR_WIDTH-1:ADDRLSB])
+                3'b000: red_color0 <= axil_wdata_i[COLOR_WIDTH-1:0];
+                3'b001: red_color1 <= axil_wdata_i[COLOR_WIDTH-1:0];
+                3'b010: blue_color0 <= axil_wdata_i[COLOR_WIDTH-1:0];
+                3'b011: blue_color1 <= axil_wdata_i[COLOR_WIDTH-1:0];
+                3'b100: green_color0 <= axil_wdata_i[COLOR_WIDTH-1:0];
+                3'b011: green_color1 <= axil_wdata_i[COLOR_WIDTH-1:0];
+            endcase
+        end
+    end
 
     wire [N_COL_WIDTH-1:0]   current_col; // column of the current tile
     wire [N_ROW_WIDTH-1:0]   current_row; // row of the current tile
@@ -203,7 +228,7 @@ module vga_top #(
     wire [0:C_WIDTH-1] w_data_rom;        // write data to the bitmap memory
     wire [ADDRLSB-1:0] char_sel;          // the specific character of the group of 4 to be read for the display
     always @(posedge clk_i) begin
-        wr_en_rom <= axil_wready_i & (~axil_waddr_i[C_AXI_ADDR_WIDTH-1]) & axil_wstrb_i[0];
+        wr_en_rom <= axil_wready_i & (~axil_waddr_i[C_AXI_ADDR_WIDTH-1]) & (~axil_waddr_i[C_AXI_ADDR_WIDTH-2]) & axil_wstrb_i[0];
     end
 
     assign char_sel = r_tile[ADDRLSB-1:0];
@@ -226,9 +251,9 @@ module vga_top #(
         //if We don't use the active video pixel value will increase in the 
         //section outside the display as well.
         if (activevideo) begin
-                R_int <= char[x_img] ? COLOR_1 : COLOR_0; // paint white if pixel from the bitmap is active, black otherwise
-                G_int <= char[x_img] ? COLOR_1 : COLOR_0; 
-                B_int <= char[x_img] ? COLOR_1 : COLOR_0; 
+                R_int <= char[x_img] ? red_color1 : red_color0; // paint white if pixel from the bitmap is active, black otherwise
+                G_int <= char[x_img] ? green_color1 : green_color0; 
+                B_int <= char[x_img] ? blue_color1 : blue_color0; 
         end
     end
 

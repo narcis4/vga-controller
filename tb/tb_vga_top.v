@@ -258,6 +258,17 @@ module tb_vga_top;
             $display("ERROR 7");
             error = 1'b1;
         end
+        #0.04 axil_wdata = 32'h00000000; // write the color 0
+        axil_waddr = 13'h0801; // second reg memory address (color red for characters)
+        axil_wready = 1'b1;
+        #0.04 axil_wready = 1'b0;
+        $display("Color register write");
+        wait(pmod[7:0] == 8'h0F);
+        #0.08 if (pmod[7:0] != 8'h0F) begin
+            $display("ERROR 1");
+            error = 1'b1;
+        end
+        
     end
         
     vga_top dut_vga_top( .clk_i(clk), .PMOD(pmod), .axil_wdata_i(axil_wdata), .axil_wstrb_i(axil_wstrb), .axil_waddr_i(axil_waddr), .axil_wready_i(axil_wready),
