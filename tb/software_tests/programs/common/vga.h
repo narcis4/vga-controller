@@ -44,6 +44,12 @@
 #endif
 #include <stdint.h>
 #include <stdlib.h>
+uint32_t test_vga(void);
+void read_range(uint32_t entry, uint32_t exit,uint32_t aligment);
+void search(uint32_t entry, uint32_t exit,uint32_t aligment, uint32_t key);
+uint32_t write_ROM(uint32_t addr, uint32_t data);
+uint32_t write_buffer(uint32_t addr, uint32_t data);
+uint32_t test_vga(void);
 
 #endif
 

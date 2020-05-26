@@ -22,7 +22,7 @@ uint32_t bench_vga(void){
             read_range(VGA_BASE,LAST_ADDR,4);
         }
     }
-    read_test_loop(VGA_BASE,LAST_ADDR,4);
+    read_range(VGA_BASE,LAST_ADDR,4);
     return(0);
 }
 
