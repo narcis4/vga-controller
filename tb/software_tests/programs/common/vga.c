@@ -59,17 +59,17 @@ uint32_t test_vga(void){
     
     uint32_t addr_ROM = 0x00000000;
     uint32_t data_ROM = 0xFF773311;
-    for (int i=0; i<=LAST_ROM; ++i) {
+    for (unsigned int i=BASE_ROM; i<=LAST_ROM; ++i) {
         write_ROM(addr_ROM, data_ROM);
         addr_ROM = addr_ROM + 1;
-        dat_ROM = (dat_ROM >> 1) | (dat_ROM << 31); // shift 1 bit right wrap around
+        data_ROM = (data_ROM >> 1) | (data_ROM << 31); // shift 1 bit right wrap around
     }
 
     uint32_t addr_buff = 0x00000000;
     uint32_t data_buff = 0xFF765432;
-    for (int i=0; i<=LAST_ROM; ++i) {
+    for (int i=BASE_BUFF; i<=LAST_BUFF; i=i+4) {
         write_buffer(addr_buff, data_buff);
-        addr_buff = addr_buff + 1;
+        addr_buff = addr_buff + 4;
         data_buff = (data_buff >> 8) | (data_buff << 24); // shift 8 bit right wrap around
     }
     
