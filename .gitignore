@@ -8,3 +8,10 @@
 /tb/qsim_vga_buffer
 /tb/qsim_vga_top
 /tb/qsim_vga_fontMem
+/tb/software_tests/Makefile
+*.o
+*.hex
+*.dump
+*.status
+*.log
+*.riscv
