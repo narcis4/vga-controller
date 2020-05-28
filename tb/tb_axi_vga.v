@@ -58,7 +58,7 @@ module tb_axi_vga;
     initial begin
         // signal initialization
         s_axi_aclk = 1'b0;
-        s_axi_aresetn = 1'b1;
+        s_axi_aresetn = 1'b0;
         s_axi_awvalid = 1'b0;
         s_axi_awaddr = 13'b0;
         s_axi_awprot = 3'b0;
@@ -77,9 +77,10 @@ module tb_axi_vga;
         read_timeout = 4'd0;
         read_data = 32'd0;
         read_data2 = 32'd0;
+        #1 s_axi_aresetn = 1'b1;
 
         // first write, address buffer 0, data 0xFFFFFFFF, strobe 1 (only writes the least significant byte)
-        #15 s_axi_awaddr = 13'h1000;
+        #14 s_axi_awaddr = 13'h1000;
         s_axi_awvalid = 1'b1;
         s_axi_wdata = 32'hFFFFFFFF;
         s_axi_wvalid = 1'b1;

@@ -1,6 +1,6 @@
 vlib work
 vlog +acc "../../rtl/vga_syncGen.v"
-vlog +acc "../../rtl/vga_buffer.v"
+vlog +define+SIM +acc "../../rtl/vga_buffer.v"
 vlog +define+WAVE +acc "../../rtl/vga_fontMem.v"
 vlog +acc "../../rtl/vga_top.v"
 vlog +acc "../../rtl/axi_vga.v"

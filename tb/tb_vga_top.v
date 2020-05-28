@@ -5,7 +5,8 @@ module tb_vga_top;
     localparam	C_AXI_ADDR_WIDTH = 13;
 	localparam	C_AXI_DATA_WIDTH = 32;
 
-    reg                          clk;	       
+    reg                          clk;	
+    reg                          rstn;       
     //reg RSTN_BUTTON, // rstn,
     wire [15:0]                  pmod;        
     reg [C_AXI_DATA_WIDTH-1:0]   axil_wdata; 
@@ -30,7 +31,9 @@ module tb_vga_top;
     initial begin
         // signal initialization
         clk = 1'b0;
+        rstn = 1'b0;
         error = 1'b0;
+        #0.005 rstn = 1'b1;
         // send the address 0 for the first column and row of the screen and the data for the character 'A'
         axil_wdata = 32'd65; // 'A' in ASCII
         axil_wstrb = 4'b0001;
@@ -39,7 +42,7 @@ module tb_vga_top;
         axil_rreq = 1'b0;
         axil_raddr = 13'd0;
         error = 1'b0;
-        #0.025 axil_wready = 1'b0;
+        #0.020 axil_wready = 1'b0;
         // send the address of the last tile and the data for the character 'C'
         #0.04 axil_wdata = 32'd67; // 'C' in ASCII
         axil_waddr = 13'd6495; // 4096 + 2399
@@ -271,8 +274,8 @@ module tb_vga_top;
         
     end
         
-    vga_top dut_vga_top( .clk_i(clk), .PMOD(pmod), .axil_wdata_i(axil_wdata), .axil_wstrb_i(axil_wstrb), .axil_waddr_i(axil_waddr), .axil_wready_i(axil_wready),
-.axil_rreq_i(axil_rreq), .axil_raddr_i(axil_raddr), .axil_rdata_o(axil_rdata));
+    vga_top dut_vga_top( .clk_i(clk), .rstn_i(rstn), .PMOD(pmod), .axil_wdata_i(axil_wdata), .axil_wstrb_i(axil_wstrb), .axil_waddr_i(axil_waddr), 
+    .axil_wready_i(axil_wready), .axil_rreq_i(axil_rreq), .axil_raddr_i(axil_raddr), .axil_rdata_o(axil_rdata));
 
     /* Make a regular pulsing clock. */
     always #0.01 clk = !clk;
