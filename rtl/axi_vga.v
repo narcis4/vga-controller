@@ -194,9 +194,9 @@ module axi_vga #(
 
 `ifdef	FORMAL
     vga_top #(.C_AXI_ADDR_WIDTH(C_AXI_ADDR_WIDTH), .C_AXI_DATA_WIDTH(C_AXI_DATA_WIDTH))
-    vga_top_inst(.clk_i(S_AXI_ACLK), .PMOD(vga_o), .axil_wdata_i(wskd_data), .axil_wstrb_i(wskd_strb), .axil_waddr_i(awskd_addr), .axil_wready_i(axil_write_ready), 
-    .axil_rreq_i(axil_read_req), .axil_raddr_i(arskd_addr), .axil_rdata_o(axil_read_data), .f_rdata_i(axil_read_data), .f_past_valid_i(f_past_valid), 
-    .f_reset_i(S_AXI_ARESETN), .f_ready_i(axil_read_ready));
+    vga_top_inst(.clk_i(S_AXI_ACLK), .rstn_i(S_AXI_ARESETN), .PMOD(vga_o), .axil_wdata_i(wskd_data), .axil_wstrb_i(wskd_strb), .axil_waddr_i(awskd_addr), 
+    .axil_wready_i(axil_write_ready), .axil_rreq_i(axil_read_req), .axil_raddr_i(arskd_addr), .axil_rdata_o(axil_read_data), .f_rdata_i(axil_read_data), 
+    .f_past_valid_i(f_past_valid), .f_reset_i(S_AXI_ARESETN), .f_ready_i(axil_read_ready));
 	////////////////////////////////////////////////////////////////////////
 	//
 	// Formal properties used in verfiying this core
@@ -287,8 +287,8 @@ module axi_vga #(
 
 `else
     vga_top #(.C_AXI_ADDR_WIDTH(C_AXI_ADDR_WIDTH), .C_AXI_DATA_WIDTH(C_AXI_DATA_WIDTH))
-    vga_top_inst(.clk_i(S_AXI_ACLK), .PMOD(vga_o), .axil_wdata_i(wskd_data), .axil_wstrb_i(wskd_strb), .axil_waddr_i(awskd_addr), .axil_wready_i(axil_write_ready), 
-    .axil_rreq_i(axil_read_req), .axil_raddr_i(arskd_addr), .axil_rdata_o(axil_read_data));
+    vga_top_inst(.clk_i(S_AXI_ACLK), .rstn_i(S_AXI_ARESETN), .PMOD(vga_o), .axil_wdata_i(wskd_data), .axil_wstrb_i(wskd_strb), .axil_waddr_i(awskd_addr), 
+    .axil_wready_i(axil_write_ready), .axil_rreq_i(axil_read_req), .axil_raddr_i(arskd_addr), .axil_rdata_o(axil_read_data));
 `endif
 
 endmodule

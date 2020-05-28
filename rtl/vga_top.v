@@ -23,7 +23,7 @@ module vga_top #(
     input wire f_ready_i,                           // AXI read ready
 `endif
     input wire                          clk_i,	       // 25MHz clock input
-    //input wire RSTN_BUTTON, // rstn,
+    input wire                          rstn_i,
     output wire [15:0]                  PMOD,          // VGA PMOD
     input wire [C_AXI_DATA_WIDTH-1:0]   axil_wdata_i,  // AXI write data
     input wire [C_AXI_DATA_WIDTH/8-1:0] axil_wstrb_i,  // AXI write strobe
@@ -52,8 +52,6 @@ module vga_top #(
     localparam UART_DATA_WIDTH = 8;
     localparam COLOR_WIDTH = 4;
     localparam REG_ADDR_WIDTH = 5;
-    //localparam COLOR_0 = 4'b0000; // black background
-    //localparam COLOR_1 = 4'b1111; // white characters
     localparam N_ROW_WIDTH = 5;
     localparam N_COL_WIDTH = 7;
     localparam N_TOT_WIDTH = N_ROW_WIDTH + N_COL_WIDTH;
@@ -94,16 +92,6 @@ module vga_top #(
     assign PMOD[13] = G1;
     assign PMOD[14] = G2;
     assign PMOD[15] = G3;
-
-    //sync reset from button and enable pull up
-    /*wire rstn_button_int; //internal signal after pullups
-    reg bf1_rstn;
-    reg bf2_rstn;
-    always @(posedge px_clk) begin
-        bf1_rstn <= rstn_button_int;
-        bf2_rstn <= bf1_rstn;
-    end
-    assign  rstn = bf2_rstn;*/
     
     reg clk25 = 1'b0; // 25 Mhz clock
     // Divide the 50 Mhz clock to generate the 25 Mhz one
@@ -121,12 +109,13 @@ module vga_top #(
     wire [N_COUNTER_WIDTH-1:0] vc;  // vertical counter
     wire activevideo;               // 1 if displaying pixels, 0 otherwise
 
-    vga_syncGen vga_syncGen_inst( .clk_i(clk25), .hsync_o(HS), .vsync_o(VS), .x_px_o(x_px), .y_px_o(y_px), .hc_o(hc), .vc_o(vc), .activevideo_o(activevideo));
+    vga_syncGen vga_syncGen_inst( .clk_i(clk25), .rstn_i(rstn_i), .hsync_o(HS), .vsync_o(VS), .x_px_o(x_px), .y_px_o(y_px), 
+    .hc_o(hc), .vc_o(vc), .activevideo_o(activevideo));
 
     //Internal registers for current pixel color
-    reg [COLOR_WIDTH-1:0] R_int = 4'b0000;
-    reg [COLOR_WIDTH-1:0] G_int = 4'b0000;
-    reg [COLOR_WIDTH-1:0] B_int = 4'b0000;
+    reg [COLOR_WIDTH-1:0] R_int;
+    reg [COLOR_WIDTH-1:0] G_int;
+    reg [COLOR_WIDTH-1:0] B_int;
     //RGB values assigment from pixel color register or black if we are not in display zone
     assign R0 = activevideo ? R_int[0] :0; 
     assign R1 = activevideo ? R_int[1] :0; 
@@ -141,26 +130,39 @@ module vga_top #(
     assign B2 = activevideo ? B_int[2] :0; 
     assign B3 = activevideo ? B_int[3] :0; 
 
-    reg [COLOR_WIDTH-1:0] red_color0 = 4'b0000;   // background color (black)
-    reg [COLOR_WIDTH-1:0] red_color1 = 4'b1111;   // character color (white)
-    reg [COLOR_WIDTH-1:0] blue_color0 = 4'b0000;  // background color (black)
-    reg [COLOR_WIDTH-1:0] blue_color1 = 4'b1111;  // character color (white)
-    reg [COLOR_WIDTH-1:0] green_color0 = 4'b0000; // background color (black)
-    reg [COLOR_WIDTH-1:0] green_color1 = 4'b1111; // character color (white)
+    reg [COLOR_WIDTH-1:0] red_color0;   // background color (black)
+    reg [COLOR_WIDTH-1:0] red_color1;   // character color (white)
+    reg [COLOR_WIDTH-1:0] blue_color0;  // background color (black)
+    reg [COLOR_WIDTH-1:0] blue_color1;  // character color (white)
+    reg [COLOR_WIDTH-1:0] green_color0; // background color (black)
+    reg [COLOR_WIDTH-1:0] green_color1; // character color (white)
     reg wr_en_regs = 1'b0;
-    always @(posedge clk_i) begin
-        wr_en_regs <= axil_wready_i & (~axil_waddr_i[C_AXI_ADDR_WIDTH-1]) & axil_waddr_i[C_AXI_ADDR_WIDTH-2] & axil_wstrb_i[0];
+    always @(posedge clk_i, negedge rstn_i) begin
+        if (~rstn_i)
+            wr_en_regs <= 0;
+        else
+            wr_en_regs <= axil_wready_i & (~axil_waddr_i[C_AXI_ADDR_WIDTH-1]) & axil_waddr_i[C_AXI_ADDR_WIDTH-2] & axil_wstrb_i[0];
     end
-    always @(posedge clk_i) begin
-        if (wr_en_regs) begin
-            case(axil_waddr_i[REG_ADDR_WIDTH-1:ADDRLSB])
-                3'b000: red_color0 <= axil_wdata_i[COLOR_WIDTH-1:0];
-                3'b001: red_color1 <= axil_wdata_i[COLOR_WIDTH-1:0];
-                3'b010: blue_color0 <= axil_wdata_i[COLOR_WIDTH-1:0];
-                3'b011: blue_color1 <= axil_wdata_i[COLOR_WIDTH-1:0];
-                3'b100: green_color0 <= axil_wdata_i[COLOR_WIDTH-1:0];
-                3'b011: green_color1 <= axil_wdata_i[COLOR_WIDTH-1:0];
-            endcase
+    always @(posedge clk_i, negedge rstn_i) begin
+        if (~rstn_i) begin
+            red_color0 <= 4'b0000;   // background color (black)
+            red_color1 <= 4'b1111;   // character color (white)
+            blue_color0 <= 4'b0000;  // background color (black)
+            blue_color1 <= 4'b1111;  // character color (white)
+            green_color0 <= 4'b0000; // background color (black)
+            green_color1 <= 4'b1111; // character color (white)
+        end
+        else begin
+            if (wr_en_regs) begin
+                case(axil_waddr_i[REG_ADDR_WIDTH-1:ADDRLSB])
+                    3'b000: red_color0 <= axil_wdata_i[COLOR_WIDTH-1:0];
+                    3'b001: red_color1 <= axil_wdata_i[COLOR_WIDTH-1:0];
+                    3'b010: blue_color0 <= axil_wdata_i[COLOR_WIDTH-1:0];
+                    3'b011: blue_color1 <= axil_wdata_i[COLOR_WIDTH-1:0];
+                    3'b100: green_color0 <= axil_wdata_i[COLOR_WIDTH-1:0];
+                    3'b011: green_color1 <= axil_wdata_i[COLOR_WIDTH-1:0];
+                endcase
+            end
         end
     end
 
@@ -188,10 +190,15 @@ module vga_top #(
     wire [0:C_WIDTH-1]                     char;      // bitmap of 1 row of a character
     wire [N_CHARS_WIDTH+C_ADDR_HEIGHT-1:0] font_in;   // address for access to the font memory, concatenation of 1 character address and a row number
 
-    reg wr_ena = 1'b0; // Write enable for the buffer
+    reg wr_ena; // Write enable for the buffer
     // Write to the buffer if we are ready and the address is in the buffer range (4069-6496)
-    always @(posedge clk_i) begin
-        wr_ena <= (axil_wready_i & axil_waddr_i[C_AXI_ADDR_WIDTH-1]) && axil_waddr_i < 13'd6496;
+    always @(posedge clk_i, negedge rstn_i) begin
+        if (~rstn_i) begin
+            wr_ena <= 0;
+        end
+        else begin
+            wr_ena <= (axil_wready_i & axil_waddr_i[C_AXI_ADDR_WIDTH-1]) && axil_waddr_i < 13'd6496;
+        end
     end
 
     wire [N_TOT_WIDTH-1:0] r_tile;            // number of the tile to be accessed
@@ -224,11 +231,16 @@ module vga_top #(
 `endif
     
     wire [ROM_ADDR_WIDTH-1:0] w_addr_rom; // write address to the bitmap memory
-    reg wr_en_rom = 1'b0;                 // write enable for the bitmap memory
+    reg wr_en_rom;                 // write enable for the bitmap memory
     wire [0:C_WIDTH-1] w_data_rom;        // write data to the bitmap memory
     wire [ADDRLSB-1:0] char_sel;          // the specific character of the group of 4 to be read for the display
-    always @(posedge clk_i) begin
-        wr_en_rom <= axil_wready_i & (~axil_waddr_i[C_AXI_ADDR_WIDTH-1]) & (~axil_waddr_i[C_AXI_ADDR_WIDTH-2]) & axil_wstrb_i[0];
+    always @(posedge clk_i, negedge rstn_i) begin
+        if (~rstn_i) begin
+            wr_en_rom <= 0;
+        end
+        else begin
+            wr_en_rom <= axil_wready_i & (~axil_waddr_i[C_AXI_ADDR_WIDTH-1]) & (~axil_waddr_i[C_AXI_ADDR_WIDTH-2]) & axil_wstrb_i[0];
+        end
     end
 
     assign char_sel = r_tile[ADDRLSB-1:0];
@@ -239,21 +251,21 @@ module vga_top #(
     vga_fontMem vga_fontMem_inst( .clk_i(clk25), .addr_i(font_in), .dout_o(char), .addr_w_i(w_addr_rom), .wr_en_i(wr_en_rom), .din_i(w_data_rom));
 
     //Update next pixel color
-    //always @(posedge clk_i, negedge rstn) begin
-    always @(posedge clk25) begin
-        //if (!rstn) begin
-                //R_int <= 4'b0;
-                //G_int <= 4'b0;
-                //B_int <= 4'b0;
-        //end else
-        
+    always @(posedge clk_i, negedge rstn_i) begin
+        if (~rstn_i) begin
+                R_int <= 4'b0;
+                G_int <= 4'b0;
+                B_int <= 4'b0;
+        end 
+        else begin
         //remember that there is a section outside the screen
         //if We don't use the active video pixel value will increase in the 
         //section outside the display as well.
-        if (activevideo) begin
-                R_int <= char[x_img] ? red_color1 : red_color0; // paint white if pixel from the bitmap is active, black otherwise
-                G_int <= char[x_img] ? green_color1 : green_color0; 
-                B_int <= char[x_img] ? blue_color1 : blue_color0; 
+            if (activevideo) begin
+                    R_int <= char[x_img] ? red_color1 : red_color0; // paint white if pixel from the bitmap is active, black otherwise
+                    G_int <= char[x_img] ? green_color1 : green_color0; 
+                    B_int <= char[x_img] ? blue_color1 : blue_color0; 
+            end
         end
     end
 

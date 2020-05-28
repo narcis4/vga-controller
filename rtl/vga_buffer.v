@@ -44,6 +44,7 @@ module vga_buffer
  
     reg [DATA_WIDTH-1:0] bmem [0:NUM_ADDRS-1]; // memory of the current frame
 
+`ifdef SIM
     // memory initialization
     integer i;
     initial begin
@@ -51,6 +52,14 @@ module vga_buffer
             bmem[i]=28'd0;
         end
     end
+    
+    // read for AXI
+    always @(posedge clk_i) begin
+        if (r_req_i) begin
+            r_data_o <= bmem[r_addr_i];
+        end
+    end
+`endif
 
     // read for display and write from AXI operation
     integer k;
@@ -63,7 +72,7 @@ module vga_buffer
 		    end
         end
     end
-    
+  
     // read for AXI
     always @(posedge clk_i) begin
         if (r_req_i) begin

@@ -34,12 +34,16 @@ module vga_fontMem
 
     reg [0:DATA_WIDTH-1] mem [0:(1 << ADDR_WIDTH)-1]; // single port memory of the characters bitmap
 
-//`ifdef WAVE
+`ifdef WAVE
     // memory initialization
     initial begin
         if (FONT_FILE) $readmemb(FONT_FILE, mem);
     end
-//`endif
+`elsif SIM
+    initial begin
+        if (FONT_FILE) $readmemb(FONT_FILE, mem);
+    end
+`endif
 
     // write and read operations, if both happen in the same cycle, no data is read and the output is 0 (background)
     always @(posedge clk_i) begin
