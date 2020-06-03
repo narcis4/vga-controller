@@ -12,7 +12,7 @@
 // and processes data from and to the AXI bus
 module vga_top #(
     parameter C_AXI_DATA_WIDTH = 32,                // Width of the AXI-lite bus
-    parameter C_AXI_ADDR_WIDTH = 13,                // AXI addr width based on the number of registers
+    parameter C_AXI_ADDR_WIDTH = 15,                // AXI addr width based on the number of registers
     parameter ADDRLSB = $clog2(C_AXI_DATA_WIDTH)-3  // Least significant bits from address not used due to write strobes
 )
 (
@@ -191,7 +191,7 @@ module vga_top #(
     reg wr_ena = 1'b0; // Write enable for the buffer
     // Write to the buffer if we are ready and the address is in the buffer range (4069-6496)
     always @(posedge clk_i) begin
-        wr_ena <= (axil_wready_i & axil_waddr_i[C_AXI_ADDR_WIDTH-1]) && axil_waddr_i < 13'd6496;
+        wr_ena <= (axil_wready_i & axil_waddr_i[C_AXI_ADDR_WIDTH-1]) && axil_waddr_i < 15'h4960;
     end
 
     wire [N_TOT_WIDTH-1:0] r_tile;            // number of the tile to be accessed
@@ -232,7 +232,7 @@ module vga_top #(
     end
 
     assign char_sel = r_tile[ADDRLSB-1:0];
-    assign w_addr_rom = axil_waddr_i[ROM_ADDR_WIDTH-1:0]; 
+    assign w_addr_rom = axil_waddr_i[C_AXI_ADDR_WIDTH-3:ADDRLSB]; 
     assign w_data_rom = axil_wdata_i[C_WIDTH-1:0]; // write only the least significant byte of the data
     assign font_in = {1'b0, char_addr[char_sel*7+:7], y_img};
 

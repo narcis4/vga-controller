@@ -59,9 +59,9 @@ uint32_t test_vga(void){
     
     uint32_t addr_ROM = 0x00000000;
     uint32_t data_ROM = 0xFF773311;
-    for (unsigned int i=BASE_ROM; i<=LAST_ROM; ++i) {
+    for (unsigned int i=BASE_ROM; i<=LAST_ROM; i=i+4) {
         write_ROM(addr_ROM, data_ROM);
-        addr_ROM = addr_ROM + 1;
+        addr_ROM = addr_ROM + 4;
         data_ROM = (data_ROM >> 1) | (data_ROM << 31); // shift 1 bit right wrap around
     }
 

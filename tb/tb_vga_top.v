@@ -2,7 +2,7 @@
 
 module tb_vga_top;
 
-    localparam	C_AXI_ADDR_WIDTH = 13;
+    localparam	C_AXI_ADDR_WIDTH = 15;
 	localparam	C_AXI_DATA_WIDTH = 32;
 
     reg                          clk;	       
@@ -34,15 +34,15 @@ module tb_vga_top;
         // send the address 0 for the first column and row of the screen and the data for the character 'A'
         axil_wdata = 32'd65; // 'A' in ASCII
         axil_wstrb = 4'b0001;
-        axil_waddr = 13'h1000; // first buffer address
+        axil_waddr = 15'h4000; // first buffer address
         axil_wready = 1'b1;
         axil_rreq = 1'b0;
-        axil_raddr = 13'd0;
+        axil_raddr = 15'd0;
         error = 1'b0;
         #0.025 axil_wready = 1'b0;
         // send the address of the last tile and the data for the character 'C'
         #0.04 axil_wdata = 32'd67; // 'C' in ASCII
-        axil_waddr = 13'd6495; // 4096 + 2399
+        axil_waddr = 15'h495F; // 4096 + 2399
         axil_wready = 1'b1;
         #0.04 axil_wready = 1'b0;
         // wait for the start of the next frame and then the first white pixel
@@ -225,7 +225,7 @@ module tb_vga_top;
             error = 1'b1;
         end
         #0.04 axil_wdata = 32'h000000FF; // write all the pixels to 1
-        axil_waddr = 13'h0000; // first rom memory address
+        axil_waddr = 15'h0000; // first rom memory address
         axil_wready = 1'b1;
         #0.04 axil_wready = 1'b0;
         $display("ROM memory overwrite");
@@ -259,7 +259,7 @@ module tb_vga_top;
             error = 1'b1;
         end
         #0.04 axil_wdata = 32'h00000000; // write the color 0
-        axil_waddr = 13'h0801; // second reg memory address (color red for characters)
+        axil_waddr = 15'h2001; // second reg memory address (color red for characters)
         axil_wready = 1'b1;
         #0.04 axil_wready = 1'b0;
         $display("Color register write");

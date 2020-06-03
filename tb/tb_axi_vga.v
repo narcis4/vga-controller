@@ -3,7 +3,7 @@
 
 module tb_axi_vga;
 
-    localparam	C_AXI_ADDR_WIDTH = 13;
+    localparam	C_AXI_ADDR_WIDTH = 15;
 	localparam	C_AXI_DATA_WIDTH = 32;
 	localparam [0:0]	OPT_SKIDBUFFER = 1'b0;
 	localparam [0:0]	OPT_LOWPOWER = 0;
@@ -60,14 +60,14 @@ module tb_axi_vga;
         s_axi_aclk = 1'b0;
         s_axi_aresetn = 1'b1;
         s_axi_awvalid = 1'b0;
-        s_axi_awaddr = 13'b0;
+        s_axi_awaddr = 15'b0;
         s_axi_awprot = 3'b0;
         s_axi_wvalid = 1'b0;
         s_axi_wdata = 32'b0;
         s_axi_wstrb = 4'b0;
         s_axi_bready = 1'b1;
         s_axi_arvalid = 1'b0;
-        s_axi_araddr = 13'b0;
+        s_axi_araddr = 15'b0;
         s_axi_arprot = 3'b0;
         s_axi_rready = 1'b0;
         error = 1'b0;
@@ -79,7 +79,7 @@ module tb_axi_vga;
         read_data2 = 32'd0;
 
         // first write, address buffer 0, data 0xFFFFFFFF, strobe 1 (only writes the least significant byte)
-        #15 s_axi_awaddr = 13'h1000;
+        #15 s_axi_awaddr = 15'h4000;
         s_axi_awvalid = 1'b1;
         s_axi_wdata = 32'hFFFFFFFF;
         s_axi_wvalid = 1'b1;
@@ -108,7 +108,7 @@ module tb_axi_vga;
         end
         
         // first read, reads the address 0 to check the data written
-        #6 s_axi_araddr = 13'd0;
+        #6 s_axi_araddr = 15'd0;
         s_axi_arvalid = 1'b1;
         s_axi_rready = 1'b1;
         #14 while (read_timeout < 10 && ~read_end) begin
@@ -141,7 +141,7 @@ module tb_axi_vga;
         end
 
         // second and third writes, address buffer 2396 and 2398, data 0x99999999 and 0xE6E6E6E6, strobe 0xF for the first and 0x9 for the second
-        #6 s_axi_awaddr = 13'd6492;
+        #6 s_axi_awaddr = 15'h495C;
         s_axi_awvalid = 1'b1;
         s_axi_wdata = 32'h99999999;
         s_axi_wvalid = 1'b1;
@@ -149,14 +149,14 @@ module tb_axi_vga;
         write_end = 1'b0;
         write_timeout = 4'd0;
         #14 while (write_timeout < 16 && ~write_end) begin
-            if (s_axi_awaddr != 13'd6494 || s_axi_wdata != 32'hE6E6E6E6) begin
+            if (s_axi_awaddr != 15'h495E || s_axi_wdata != 32'hE6E6E6E6) begin
                 if (s_axi_awready) begin
                     if (s_axi_wready) begin
-                        #2 s_axi_awaddr = 13'd6494;
+                        #2 s_axi_awaddr = 15'h495E;
                         s_axi_wdata = 32'hE6E6E6E6;
                         s_axi_wstrb = 4'b1001;
                     end
-                    else #2 s_axi_awaddr = 13'd6494;
+                    else #2 s_axi_awaddr = 15'h495E;
                 end
                 else begin
                     if (s_axi_wready) begin
@@ -193,20 +193,20 @@ module tb_axi_vga;
         end
 
         // second and third reads, check the data written before 
-        #6 s_axi_araddr = 13'd6492;
+        #6 s_axi_araddr = 15'h495C;
         s_axi_arvalid = 1'b1;
         s_axi_rready = 1'b1;
         read_end = 1'b0;
         read_timeout = 4'd0;
         read_data = 32'h33333333;
         #14 while (read_timeout < 16 && ~read_end) begin
-            if (s_axi_araddr != 13'd6494 || read_data == 32'h33333333) begin
+            if (s_axi_araddr != 15'h495E || read_data == 32'h33333333) begin
                 if (s_axi_arready) begin
                     if (s_axi_rvalid) begin
                         #2 read_data = s_axi_rdata;
-                        s_axi_araddr = 13'd6494;
+                        s_axi_araddr = 15'h495E;
                     end
-                    else #2 s_axi_araddr = 13'd6494;
+                    else #2 s_axi_araddr = 15'h495E;
                 end
                 else begin
                     if (s_axi_rvalid) begin

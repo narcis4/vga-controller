@@ -7,9 +7,9 @@
 #define MASK4 (0x0000ffff)
 
 #define C_AXI_DATA_WIDTH    32
-#define C_AXI_ADDR_WIDTH    13 
-#define N_REGS_ROM          2048 // 512    
-#define N_CONF_REGS         512 // 0
+#define C_AXI_ADDR_WIDTH    15 
+#define N_REGS_ROM          2048  
+#define N_CONF_REGS         2048 // 0
 #define N_REGS_BUFF         600 //2400
 #define ADDR_LSB            2
 #define OPT_MEM_ADDR_BITS   4
@@ -25,12 +25,12 @@
         //boundaries
 #define FIRST_ADDR VGA_BASE
 #define N_REGISTERS TOTAL_REGS
-#define LAST_ADDR (VGA_BASE + (N_CONF_REGS+N_REGS_BUFF-1)*4 + N_REGS_ROM)
+#define LAST_ADDR (VGA_BASE + (N_CONF_REGS+N_REGS_BUFF+N_REGS_ROM-1)*4)
         //ROM addresses
 #define BASE_ROM VGA_BASE
-#define LAST_ROM (VGA_BASE + (N_REGS_ROM-1))
+#define LAST_ROM (VGA_BASE + (N_REGS_ROM-1)*4)
         //cONF_REGS ADDRESSES
-#define BASE_CONF (LAST_ROM + 1)
+#define BASE_CONF (LAST_ROM + 4)
 #define LAST_CONF (BASE_CONF + (N_CONF_REGS-1)*4)
 #define MAIN_CONF BASE_CONF
         //Buffer addresses
