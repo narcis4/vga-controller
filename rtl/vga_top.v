@@ -66,6 +66,7 @@ module vga_top #(
     localparam C_ADDR_HEIGHT = 4;
     localparam ROM_ADDR_WIDTH = 11;
     localparam BUF_ADDR_WIDTH = 10;
+    localparam AXI_ADDR_MSB = 14;
 
 //--------------------
 //IO pins assigments
@@ -149,7 +150,7 @@ module vga_top #(
     reg [COLOR_WIDTH-1:0] green_color1 = 4'b1111; // character color (white)
     reg wr_en_regs = 1'b0;
     always @(posedge clk_i) begin
-        wr_en_regs <= axil_wready_i & (~axil_waddr_i[C_AXI_ADDR_WIDTH-1]) & axil_waddr_i[C_AXI_ADDR_WIDTH-2] & axil_wstrb_i[0];
+        wr_en_regs <= axil_wready_i & (~axil_waddr_i[AXI_ADDR_MSB]) & axil_waddr_i[AXI_ADDR_MSB-1] & axil_wstrb_i[0];
     end
     always @(posedge clk_i) begin
         if (wr_en_regs) begin
@@ -191,7 +192,7 @@ module vga_top #(
     reg wr_ena = 1'b0; // Write enable for the buffer
     // Write to the buffer if we are ready and the address is in the buffer range (4069-6496)
     always @(posedge clk_i) begin
-        wr_ena <= (axil_wready_i & axil_waddr_i[C_AXI_ADDR_WIDTH-1]) && axil_waddr_i < 15'h4960;
+        wr_ena <= (axil_wready_i & axil_waddr_i[AXI_ADDR_MSB]) && axil_waddr_i < 15'h4960;
     end
 
     wire [N_TOT_WIDTH-1:0] r_tile;            // number of the tile to be accessed
@@ -202,11 +203,11 @@ module vga_top #(
     wire [N_CHARS_WIDTH*4-1:0] r_data_buffer; // AXI read data from the buffer
     assign r_tile = current_row * N_COL + current_col;
     assign vr_addr_buffer = r_tile[N_TOT_WIDTH-1:ADDRLSB];
-    assign w_addr_buffer = axil_waddr_i[C_AXI_ADDR_WIDTH-2:ADDRLSB];
+    assign w_addr_buffer = axil_waddr_i[AXI_ADDR_MSB-1:ADDRLSB];
     // select the least significant 7 bits from each group of 8 bits (discard the MSB from each byte)
     assign w_data_buffer = {axil_wdata_i[C_AXI_DATA_WIDTH-2-:N_CHARS_WIDTH], axil_wdata_i[C_AXI_DATA_WIDTH-2-(N_CHARS_WIDTH+1)-:N_CHARS_WIDTH],
            axil_wdata_i[C_AXI_DATA_WIDTH-2-(N_CHARS_WIDTH+1)*2-:N_CHARS_WIDTH], axil_wdata_i[C_AXI_DATA_WIDTH-2-(N_CHARS_WIDTH+1)*3-:N_CHARS_WIDTH]};
-    assign r_addr_buffer = axil_raddr_i[C_AXI_ADDR_WIDTH-2:ADDRLSB];
+    assign r_addr_buffer = axil_raddr_i[AXI_ADDR_MSB-1:ADDRLSB];
     // pad the data read with a 0 before each group of 7 bits
     assign axil_rdata_o = {1'b0, r_data_buffer[N_CHARS_WIDTH*4-1-:N_CHARS_WIDTH], 1'b0, r_data_buffer[N_CHARS_WIDTH*3-1-:N_CHARS_WIDTH],
            1'b0, r_data_buffer[N_CHARS_WIDTH*2-1-:N_CHARS_WIDTH], 1'b0, r_data_buffer[N_CHARS_WIDTH-1:0]};
@@ -228,11 +229,11 @@ module vga_top #(
     wire [0:C_WIDTH-1] w_data_rom;        // write data to the bitmap memory
     wire [ADDRLSB-1:0] char_sel;          // the specific character of the group of 4 to be read for the display
     always @(posedge clk_i) begin
-        wr_en_rom <= axil_wready_i & (~axil_waddr_i[C_AXI_ADDR_WIDTH-1]) & (~axil_waddr_i[C_AXI_ADDR_WIDTH-2]) & axil_wstrb_i[0];
+        wr_en_rom <= axil_wready_i & (~axil_waddr_i[AXI_ADDR_MSB]) & (~axil_waddr_i[AXI_ADDR_MSB-1]) & axil_wstrb_i[0];
     end
 
     assign char_sel = r_tile[ADDRLSB-1:0];
-    assign w_addr_rom = axil_waddr_i[C_AXI_ADDR_WIDTH-3:ADDRLSB]; 
+    assign w_addr_rom = axil_waddr_i[AXI_ADDR_MSB-2:ADDRLSB]; 
     assign w_data_rom = axil_wdata_i[C_WIDTH-1:0]; // write only the least significant byte of the data
     assign font_in = {1'b0, char_addr[char_sel*7+:7], y_img};
 
