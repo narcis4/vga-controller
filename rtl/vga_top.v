@@ -192,7 +192,7 @@ module vga_top #(
     reg wr_ena = 1'b0; // Write enable for the buffer
     // Write to the buffer if we are ready and the address is in the buffer range (4069-6496)
     always @(posedge clk_i) begin
-        wr_ena <= (axil_wready_i & axil_waddr_i[AXI_ADDR_MSB]) && axil_waddr_i < 15'h4960;
+        wr_ena <= (axil_wready_i & axil_waddr_i[AXI_ADDR_MSB]) && axil_waddr_i[AXI_ADDR_MSB-1:0] < 15'h4960;
     end
 
     wire [N_TOT_WIDTH-1:0] r_tile;            // number of the tile to be accessed
