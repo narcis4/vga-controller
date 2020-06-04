@@ -9,7 +9,9 @@
 #define C_AXI_DATA_WIDTH    32
 #define C_AXI_ADDR_WIDTH    15 
 #define N_REGS_ROM          2048  
-#define N_CONF_REGS         2048 // 0
+//#define N_CONF_REGS         2048
+#define N_CONF_REGS         6
+#define REG_SPACE           2048
 #define N_REGS_BUFF         600 //2400
 #define ADDR_LSB            2
 #define OPT_MEM_ADDR_BITS   4
@@ -25,7 +27,7 @@
         //boundaries
 #define FIRST_ADDR VGA_BASE
 #define N_REGISTERS TOTAL_REGS
-#define LAST_ADDR (VGA_BASE + (N_CONF_REGS+N_REGS_BUFF+N_REGS_ROM-1)*4)
+#define LAST_ADDR (VGA_BASE + (REG_SPACE+N_REGS_BUFF+N_REGS_ROM-1)*4)
         //ROM addresses
 #define BASE_ROM VGA_BASE
 #define LAST_ROM (VGA_BASE + (N_REGS_ROM-1)*4)
@@ -49,6 +51,7 @@ void read_range(uint32_t entry, uint32_t exit,uint32_t aligment);
 void search(uint32_t entry, uint32_t exit,uint32_t aligment, uint32_t key);
 uint32_t write_ROM(uint32_t addr, uint32_t data);
 uint32_t write_buffer(uint32_t addr, uint32_t data);
+uint32_t write_reg(uint32_t addr, uint32_t data);
 uint32_t test_vga(void);
 
 #endif

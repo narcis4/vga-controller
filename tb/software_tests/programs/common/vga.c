@@ -55,6 +55,13 @@ uint32_t write_buffer(uint32_t addr, uint32_t data) {
     return *var;
 }
 
+uint32_t write_reg(uint32_t addr, uint32_t data) {
+    volatile uint32_t *var;
+    var=(uint32_t*)(BASE_CONF+addr);
+    *var = data;
+    return *var;
+}
+
 uint32_t test_vga(void){
     
     uint32_t addr_ROM = 0x00000000;
@@ -71,6 +78,14 @@ uint32_t test_vga(void){
         write_buffer(addr_buff, data_buff);
         addr_buff = addr_buff + 4;
         data_buff = (data_buff >> 8) | (data_buff << 24); // shift 8 bit right wrap around
+    }
+
+    uint32_t addr_reg = 0x00000000;
+    uint32_t data_reg = 0xFFFF0000;
+    for (int i=BASE_CONF; i<=LAST_CONF; i=i+4) {
+        write_reg(addr_reg, data_reg);
+        addr_reg = addr_reg + 4;
+        data_reg = (data_reg << 4) | (data_reg >> 28); // shift 4 bit left wrap around
     }
     
     read_range(VGA_BASE, LAST_ADDR, 4);

@@ -209,8 +209,21 @@ module vga_top #(
            axil_wdata_i[C_AXI_DATA_WIDTH-2-(N_CHARS_WIDTH+1)*2-:N_CHARS_WIDTH], axil_wdata_i[C_AXI_DATA_WIDTH-2-(N_CHARS_WIDTH+1)*3-:N_CHARS_WIDTH]};
     assign r_addr_buffer = axil_raddr_i[AXI_ADDR_MSB-1:ADDRLSB];
     // pad the data read with a 0 before each group of 7 bits
+`ifdef TBSIM
     assign axil_rdata_o = {1'b0, r_data_buffer[N_CHARS_WIDTH*4-1-:N_CHARS_WIDTH], 1'b0, r_data_buffer[N_CHARS_WIDTH*3-1-:N_CHARS_WIDTH],
            1'b0, r_data_buffer[N_CHARS_WIDTH*2-1-:N_CHARS_WIDTH], 1'b0, r_data_buffer[N_CHARS_WIDTH-1:0]};
+`else
+    always @(*) begin
+        case(axil_waddr_i[REG_ADDR_WIDTH-1:ADDRLSB])
+            3'b000: axil_rdata_o = {28'b0, red_color0};
+            3'b001: axil_rdata_o = {28'b0, red_color1};
+            3'b010: axil_rdata_o = {28'b0, blue_color0};
+            3'b011: axil_rdata_o = {28'b0, blue_color1};
+            3'b100: axil_rdata_o = {28'b0, green_color0};
+            3'b011: axil_rdata_o = {28'b0, green_color1};
+        endcase
+    end
+`endif
 
 
 `ifdef FORMAL
