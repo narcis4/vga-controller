@@ -1,6 +1,6 @@
 vlib work
-vlog +acc "../../rtl/vga_buffer.v"
-vlog +acc "../tb_vga_buffer.v"
+vlog +define+TBSIM +acc "../../rtl/vga_buffer.v"
+vlog +define+TBSIM +acc "../tb_vga_buffer.v"
 vsim work.tb_vga_buffer
 onerror {resume}
 quietly WaveActivateNextPane {} 0

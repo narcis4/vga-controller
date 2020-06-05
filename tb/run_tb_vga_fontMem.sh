@@ -2,7 +2,7 @@
 
 if [ -z "$1" ]
 then 
-    iverilog -o tb_vga_fontMem.x tb_vga_fontMem.v ../rtl/vga_fontMem.v
+    iverilog -DTBSIM -o tb_vga_fontMem.x tb_vga_fontMem.v ../rtl/vga_fontMem.v
     ./tb_vga_fontMem.x
     rm tb_vga_fontMem.x
     rm tb_vga_fontMem.vcd

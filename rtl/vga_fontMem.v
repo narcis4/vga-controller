@@ -17,7 +17,7 @@ module vga_fontMem
     parameter FONT_FILE = "../../includes/char_bitmap/charmem_8b_data.list",
 `elsif VERILATOR
     parameter FONT_FILE = "../soc/submodules/asic_top/submodules/processor/submodules/tile/submodules/vga/includes/char_bitmap/charmem_8b_data.list",
-`else
+`elsif TBSIM
     parameter FONT_FILE = "../includes/char_bitmap/charmem_8b_data.list", // bitmap of the characters sorted by ASCII code
 `endif
     parameter ADDR_WIDTH = 11, // log2(128 characters x 16 rows each)
@@ -34,12 +34,16 @@ module vga_fontMem
 
     reg [0:DATA_WIDTH-1] mem [0:(1 << ADDR_WIDTH)-1]; // single port memory of the characters bitmap
 
-//`ifdef WAVE
+`ifdef WAVE
     // memory initialization
     initial begin
         if (FONT_FILE) $readmemb(FONT_FILE, mem);
     end
-//`endif
+`elsif TBSIM
+    initial begin
+        if (FONT_FILE) $readmemb(FONT_FILE, mem);
+    end
+`endif
 
     // write and read operations, if both happen in the same cycle, no data is read and the output is 0 (background)
     always @(posedge clk_i) begin

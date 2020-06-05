@@ -1,8 +1,8 @@
 vlib work
 vlog +acc "../../rtl/vga_syncGen.v"
-vlog +acc "../../rtl/vga_buffer.v"
+vlog +define+TBSIM +acc "../../rtl/vga_buffer.v"
 vlog +define+WAVE +acc "../../rtl/vga_fontMem.v"
-vlog +acc "../../rtl/vga_top.v"
+vlog +define+TBSIM +acc "../../rtl/vga_top.v"
 vlog +acc "../tb_vga_top.v"
 vsim work.tb_vga_top
 onerror {resume}
