@@ -213,12 +213,12 @@ module vga_top #(
     assign axil_rdata_o = {1'b0, r_data_buffer[N_CHARS_WIDTH*4-1-:N_CHARS_WIDTH], 1'b0, r_data_buffer[N_CHARS_WIDTH*3-1-:N_CHARS_WIDTH],
            1'b0, r_data_buffer[N_CHARS_WIDTH*2-1-:N_CHARS_WIDTH], 1'b0, r_data_buffer[N_CHARS_WIDTH-1:0]};
 `else
-    assign axil_rdata_o = (axil_waddr_i[REG_ADDR_WIDTH-1:ADDRLSB] == 3'b000) ? {28'd0, red_color0} :
-           ((axil_waddr_i[REG_ADDR_WIDTH-1:ADDRLSB] == 3'b001) ? {28'd0, red_color1} :
-           ((axil_waddr_i[REG_ADDR_WIDTH-1:ADDRLSB] == 3'b010) ? {28'd0, blue_color0} :
-           ((axil_waddr_i[REG_ADDR_WIDTH-1:ADDRLSB] == 3'b011) ? {28'd0, blue_color1} :
-           ((axil_waddr_i[REG_ADDR_WIDTH-1:ADDRLSB] == 3'b100) ? {28'd0, green_color0} :
-           ((axil_waddr_i[REG_ADDR_WIDTH-1:ADDRLSB] == 3'b101) ? {28'd0, green_color1} : 32'd0)))));
+    assign axil_rdata_o = (axil_raddr_i[REG_ADDR_WIDTH-1:ADDRLSB] == 3'b000) ? {28'd0, red_color0} :
+           ((axil_raddr_i[REG_ADDR_WIDTH-1:ADDRLSB] == 3'b001) ? {28'd0, red_color1} :
+           ((axil_raddr_i[REG_ADDR_WIDTH-1:ADDRLSB] == 3'b010) ? {28'd0, blue_color0} :
+           ((axil_raddr_i[REG_ADDR_WIDTH-1:ADDRLSB] == 3'b011) ? {28'd0, blue_color1} :
+           ((axil_raddr_i[REG_ADDR_WIDTH-1:ADDRLSB] == 3'b100) ? {28'd0, green_color0} :
+           ((axil_raddr_i[REG_ADDR_WIDTH-1:ADDRLSB] == 3'b101) ? {28'd0, green_color1} : 32'd0)))));
 `endif
 
 
