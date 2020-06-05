@@ -36,7 +36,8 @@
 #define LAST_CONF (BASE_CONF + (N_CONF_REGS-1)*4)
 #define MAIN_CONF BASE_CONF
         //Buffer addresses
-#define BASE_BUFF (LAST_CONF + 4)
+//#define BASE_BUFF (LAST_CONF + 4)
+#define BASE_BUFF ((BASE_CONF + (REG_SPACE-1)*4) + 4)
 #define LAST_BUFF (BASE_BUFF + (N_REGS_BUFF-1)*4)
 
 /****** end values Specific to each implementation ******/
