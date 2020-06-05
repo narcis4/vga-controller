@@ -80,7 +80,7 @@ module tb_axi_vga;
         #1 s_axi_aresetn = 1'b1;
 
         // first write, address buffer 0, data 0xFFFFFFFF, strobe 1 (only writes the least significant byte)
-        #14 s_axi_awaddr = 13'h1000;
+        #14 s_axi_awaddr = 15'h4000;
         s_axi_awvalid = 1'b1;
         s_axi_wdata = 32'hFFFFFFFF;
         s_axi_wvalid = 1'b1;

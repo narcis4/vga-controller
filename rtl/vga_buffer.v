@@ -59,6 +59,11 @@ module vga_buffer
             r_data_o <= bmem[r_addr_i];
         end
     end
+`else
+    // read for AXI
+    always @(posedge clk_i) begin
+        r_data_o <= 28'd0;
+    end
 `endif
 
     // read for display and write from AXI operation
@@ -73,11 +78,6 @@ module vga_buffer
         end
     end
   
-    // read for AXI
-    always @(posedge clk_i) begin
-        r_data_o <= 28'd0;
-    end
-
 `ifdef FORMAL
     wire [31:0] ref_data;
     // Each 7 bit character address is padded with a 0 to reach the 32 bit width of the axi bus
