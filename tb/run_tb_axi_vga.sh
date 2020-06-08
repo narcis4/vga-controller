@@ -5,7 +5,7 @@ then
     iverilog -DTBSIM -o tb_axi_vga.x tb_axi_vga.v ../rtl/axi_vga.v ../rtl/vga_top.v ../rtl/vga_fontMem.v ../rtl/vga_buffer.v ../rtl/vga_syncGen.v
     ./tb_axi_vga.x
     rm tb_axi_vga.x
-    #rm tb_axi_vga.vcd
+    rm tb_axi_vga.vcd
 fi
 if [ "$1" == 'w' ]
 then

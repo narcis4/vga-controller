@@ -11,8 +11,8 @@ smtbmc
 [script]
 read -formal axi_vga.v
 read -formal faxil_vga_slave.v
-read -formal vga_top.v
-read -formal vga_buffer.v
+read -formal -DTBSIM vga_top.v
+read -formal -DTBSIM vga_buffer.v
 read_verilog vga_syncGen.v
 read -formal vga_fontMem.v
 --pycode-begin--

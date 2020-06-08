@@ -99,11 +99,11 @@ module axi_vga #(
 
 	wire i_reset = !S_AXI_ARESETN;
 
-	wire				            axil_write_ready; // Same as AWREADY
-	wire [C_AXI_ADDR_WIDTH-1:0]     awskd_addr;       // Same as AWADDR 
+	reg				                axil_write_ready; // Same as AWREADY
+	reg [C_AXI_ADDR_WIDTH-1:0]      awskd_addr;       // Same as AWADDR 
 	//
-	wire [C_AXI_DATA_WIDTH-1:0]	    wskd_data;        // Same as WDATA
-	wire [C_AXI_DATA_WIDTH/8-1:0]   wskd_strb;        // Same as WSTRB
+	reg [C_AXI_DATA_WIDTH-1:0]	    wskd_data;        // Same as WDATA
+	reg [C_AXI_DATA_WIDTH/8-1:0]    wskd_strb;        // Same as WSTRB
 	reg			                    axil_bvalid;      // Same as BVALID
 	//
 	wire				            axil_read_ready;  // The VGA is about to read the ARADDR
@@ -137,18 +137,32 @@ module axi_vga #(
 	assign	S_AXI_AWREADY = axil_awready;
 	assign	S_AXI_WREADY  = axil_awready;
 
-	assign 	awskd_addr = S_AXI_AWADDR[C_AXI_ADDR_WIDTH-1:0];
-	assign	wskd_data  = S_AXI_WDATA;
-	assign	wskd_strb  = S_AXI_WSTRB;
+    always @(posedge S_AXI_ACLK) begin
+        if (!S_AXI_ARESETN)
+            axil_write_ready <= 1'b0;
+        else
+            axil_write_ready <= ((S_AXI_AWVALID && S_AXI_WVALID) && (!S_AXI_BVALID || S_AXI_BREADY)) || axil_awready;
+    end
 
-	assign	axil_write_ready = axil_awready;
+    always @(posedge S_AXI_ACLK) begin
+        if (!S_AXI_ARESETN) begin
+            awskd_addr <= 1'b0;
+            wskd_data <= 1'b0;
+            wskd_strb <= 1'b0;
+        end
+        else if ((S_AXI_AWVALID && S_AXI_WVALID) && (!S_AXI_BVALID || S_AXI_BREADY) && !axil_awready) begin
+            awskd_addr <= S_AXI_AWADDR[C_AXI_ADDR_WIDTH-1:0];
+            wskd_data <= S_AXI_WDATA;
+            wskd_strb <= S_AXI_WSTRB;
+        end
+    end
 
     // Control of write acknowledgement, it is set to 1 when the VGA accepts a write transaction
 	initial	axil_bvalid = 0;
 	always @(posedge S_AXI_ACLK) begin
 	    if (i_reset)
 		    axil_bvalid <= 0;
-	    else if (axil_write_ready)
+	    else if (axil_awready)
 		    axil_bvalid <= 1;
 	    else if (S_AXI_BREADY)
 		    axil_bvalid <= 0;
