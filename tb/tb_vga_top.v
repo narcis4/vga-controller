@@ -7,7 +7,6 @@ module tb_vga_top;
 
     reg                          clk;	
     reg                          rstn;       
-    //reg RSTN_BUTTON, // rstn,
     wire [15:0]                  pmod;        
     reg [C_AXI_DATA_WIDTH-1:0]   axil_wdata; 
     reg [C_AXI_DATA_WIDTH/8-1:0] axil_wstrb; 

@@ -31,7 +31,7 @@
 // Generation of the VGA sync signals, the position of the current pixel, the horizontal and vertical counters of the screen and the activevideo signal
 module vga_syncGen (
             input wire       clk_i,           // Input clock: 25MHz
-            input wire       rstn_i,
+            input wire       rstn_i,          // Active low reset signal
             output wire      hsync_o,         // Horizontal sync out
             output wire      vsync_o,         // Vertical sync out
             output reg [9:0] x_px_o,          // X position for actual pixel

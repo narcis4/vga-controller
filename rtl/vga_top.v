@@ -23,7 +23,7 @@ module vga_top #(
     input wire f_ready_i,                           // AXI read ready
 `endif
     input wire                          clk_i,	       // 25MHz clock input
-    input wire                          rstn_i,
+    input wire                          rstn_i,        // Active low reset signal
     output wire [15:0]                  PMOD,          // VGA PMOD
     input wire [C_AXI_DATA_WIDTH-1:0]   axil_wdata_i,  // AXI write data
     input wire [C_AXI_DATA_WIDTH/8-1:0] axil_wstrb_i,  // AXI write strobe
@@ -131,20 +131,23 @@ module vga_top #(
     assign B2 = activevideo ? B_int[2] :0; 
     assign B3 = activevideo ? B_int[3] :0; 
 
-    reg [COLOR_WIDTH-1:0] red_color0;   // background color (black)
-    reg [COLOR_WIDTH-1:0] red_color1;   // character color (white)
-    reg [COLOR_WIDTH-1:0] blue_color0;  // background color (black)
-    reg [COLOR_WIDTH-1:0] blue_color1;  // character color (white)
-    reg [COLOR_WIDTH-1:0] green_color0; // background color (black)
-    reg [COLOR_WIDTH-1:0] green_color1; // character color (white)
-    reg wr_en_regs = 1'b0;
+    reg [COLOR_WIDTH-1:0] red_color0;   // Red component of background color 
+    reg [COLOR_WIDTH-1:0] red_color1;   // Red component of character color
+    reg [COLOR_WIDTH-1:0] blue_color0;  
+    reg [COLOR_WIDTH-1:0] blue_color1;  
+    reg [COLOR_WIDTH-1:0] green_color0; 
+    reg [COLOR_WIDTH-1:0] green_color1; 
+    reg wr_en_regs = 1'b0;              // Write enable for the color registers
 
+    // Control for the write enable
     always @(posedge clk_i, negedge rstn_i) begin
         if (~rstn_i)
             wr_en_regs <= 0;
         else
             wr_en_regs <= axil_wready_i & (~axil_waddr_i[AXI_ADDR_MSB]) & axil_waddr_i[AXI_ADDR_MSB-1] & axil_wstrb_i[0];
     end
+
+    // Color registers reset and write
     always @(posedge clk_i, negedge rstn_i) begin
         if (~rstn_i) begin
             red_color0 <= 4'b0000;   // background color (black)
@@ -193,7 +196,7 @@ module vga_top #(
     wire [N_CHARS_WIDTH+C_ADDR_HEIGHT-1:0] font_in;   // address for access to the font memory, concatenation of 1 character address and a row number
 
     reg wr_ena; // Write enable for the buffer
-    // Write to the buffer if we are ready and the address is in the buffer range (4069-6496)
+    // Write to the buffer if we are ready and the address is in the buffer range
     always @(posedge clk_i, negedge rstn_i) begin
         if (~rstn_i) begin
             wr_ena <= 0;
@@ -216,11 +219,12 @@ module vga_top #(
     assign w_data_buffer = {axil_wdata_i[C_AXI_DATA_WIDTH-2-:N_CHARS_WIDTH], axil_wdata_i[C_AXI_DATA_WIDTH-2-(N_CHARS_WIDTH+1)-:N_CHARS_WIDTH],
            axil_wdata_i[C_AXI_DATA_WIDTH-2-(N_CHARS_WIDTH+1)*2-:N_CHARS_WIDTH], axil_wdata_i[C_AXI_DATA_WIDTH-2-(N_CHARS_WIDTH+1)*3-:N_CHARS_WIDTH]};
     assign r_addr_buffer = axil_raddr_i[AXI_ADDR_MSB-1:ADDRLSB];
-    // pad the data read with a 0 before each group of 7 bits
 `ifdef TBSIM
+    // pad the data read with a 0 before each group of 7 bits
     assign axil_rdata_o = {1'b0, r_data_buffer[N_CHARS_WIDTH*4-1-:N_CHARS_WIDTH], 1'b0, r_data_buffer[N_CHARS_WIDTH*3-1-:N_CHARS_WIDTH],
            1'b0, r_data_buffer[N_CHARS_WIDTH*2-1-:N_CHARS_WIDTH], 1'b0, r_data_buffer[N_CHARS_WIDTH-1:0]};
 `else
+    // read from one of the color registers based on the AXI read address
     assign axil_rdata_o = (axil_raddr_i[REG_ADDR_WIDTH-1:ADDRLSB] == 3'b000) ? {28'd0, red_color0} :
            ((axil_raddr_i[REG_ADDR_WIDTH-1:ADDRLSB] == 3'b001) ? {28'd0, red_color1} :
            ((axil_raddr_i[REG_ADDR_WIDTH-1:ADDRLSB] == 3'b010) ? {28'd0, blue_color0} :
@@ -242,9 +246,10 @@ module vga_top #(
 `endif
     
     wire [ROM_ADDR_WIDTH-1:0] w_addr_rom; // write address to the bitmap memory
-    reg wr_en_rom;                 // write enable for the bitmap memory
+    reg wr_en_rom;                        // write enable for the bitmap memory
     wire [0:C_WIDTH-1] w_data_rom;        // write data to the bitmap memory
     wire [ADDRLSB-1:0] char_sel;          // the specific character of the group of 4 to be read for the display
+    // Write the bitmap memory if the VGA is ready and the address is in the correct range
     always @(posedge clk_i, negedge rstn_i) begin
         if (~rstn_i) begin
             wr_en_rom <= 0;

@@ -99,11 +99,11 @@ module axi_vga #(
 
 	wire i_reset = !S_AXI_ARESETN;
 
-	reg				                axil_write_ready; // Same as AWREADY
-	reg [C_AXI_ADDR_WIDTH-1:0]      awskd_addr;       // Same as AWADDR 
+	reg				                axil_write_ready; // Register for holding the write enable of the registers
+	reg [C_AXI_ADDR_WIDTH-1:0]      awskd_addr;       // Register for holding AWADDR 
 	//
-	reg [C_AXI_DATA_WIDTH-1:0]	    wskd_data;        // Same as WDATA
-	reg [C_AXI_DATA_WIDTH/8-1:0]    wskd_strb;        // Same as WSTRB
+	reg [C_AXI_DATA_WIDTH-1:0]	    wskd_data;        // Register for holding WDATA
+	reg [C_AXI_DATA_WIDTH/8-1:0]    wskd_strb;        // Register for holding WSTRB
 	reg			                    axil_bvalid;      // Same as BVALID
 	//
 	wire				            axil_read_ready;  // The VGA is about to read the ARADDR
@@ -137,6 +137,7 @@ module axi_vga #(
 	assign	S_AXI_AWREADY = axil_awready;
 	assign	S_AXI_WREADY  = axil_awready;
 
+    // This signal determines the write enable on the registers, it is held during 2 cycles because the VGA clock is slower than the bus
     always @(posedge S_AXI_ACLK) begin
         if (!S_AXI_ARESETN)
             axil_write_ready <= 1'b0;
@@ -144,6 +145,7 @@ module axi_vga #(
             axil_write_ready <= ((S_AXI_AWVALID && S_AXI_WVALID) && (!S_AXI_BVALID || S_AXI_BREADY)) || axil_awready;
     end
 
+    // Update the write address, data and strobes when the VGA is ready to write, and hold their values until the next transaction
     always @(posedge S_AXI_ACLK) begin
         if (!S_AXI_ARESETN) begin
             awskd_addr <= 1'b0;
