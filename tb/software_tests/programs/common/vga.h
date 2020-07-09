@@ -54,6 +54,7 @@ uint32_t write_ROM(uint32_t addr, uint32_t data);
 uint32_t write_buffer(uint32_t addr, uint32_t data);
 uint32_t write_reg(uint32_t addr, uint32_t data);
 uint32_t test_vga(void);
+uint32_t test_vga2(void);
 
 #endif
 

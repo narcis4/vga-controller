@@ -30,6 +30,7 @@ void main(void){
 #ifdef __UART__
     uart_init();
 #endif
-   test_vga();
+   //test_vga();
+    test_vga2();
 }
 
