@@ -94,11 +94,23 @@ module vga_top #(
     assign PMOD[14] = G2;
     assign PMOD[15] = G3;
     
+`ifdef FPGA
+    wire clk25;
+    clk_wiz_0 instance_name
+   (
+    // Clock out ports
+    .clk_out1(clk25),     // output clk_out1
+    // Status and control signals
+    .resetn(rstn_i), // input resetn
+   // Clock in ports
+    .clk_in1(clk_i));      // input clk_in1
+`else
     reg clk25 = 1'b0; // 25 Mhz clock
     // Divide the 50 Mhz clock to generate the 25 Mhz one
     always @(posedge clk_i) begin
         clk25 <= ~clk25;
     end
+`endif
 
 //--------------------
 // IP internal signals
