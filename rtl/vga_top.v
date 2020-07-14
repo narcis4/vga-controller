@@ -149,7 +149,7 @@ module vga_top #(
     reg [COLOR_WIDTH-1:0] blue_color1;  
     reg [COLOR_WIDTH-1:0] green_color0; 
     reg [COLOR_WIDTH-1:0] green_color1; 
-    reg wr_en_regs = 1'b0;              // Write enable for the color registers
+    reg wr_en_regs;                     // Write enable for the color registers
 
     // Control for the write enable
     always @(posedge clk_i, negedge rstn_i) begin
