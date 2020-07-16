@@ -10,6 +10,9 @@ module tb_vga_fontMem;
     reg [10:0] addr_w;
     reg wr_en;
     reg [0:7] din;
+    reg [10:0] addr_r;
+    reg r_req;
+    wire [0:7] r_data;
     reg error;
     reg read;
     reg write_done;
@@ -30,6 +33,8 @@ module tb_vga_fontMem;
         addr_w = 11'd0;
         wr_en = 1'b0;
         din = 8'd0;
+        addr_r = 11'd0;
+        r_req = 1'b0;
         read = 1'b1;
         write_done = 1'b0;
         finish = 1'b0;
@@ -40,7 +45,8 @@ module tb_vga_fontMem;
 `endif
     end
         
-    vga_fontMem dut_vga_fontMem( .clk_i(clk), .addr_i(addr), .dout_o(dout), .addr_w_i(addr_w), .wr_en_i(wr_en), .din_i(din));
+    vga_fontMem dut_vga_fontMem( .clk_i(clk), .addr_i(addr), .dout_o(dout), .addr_w_i(addr_w), .wr_en_i(wr_en), .din_i(din), .addr_r_i(addr_r), .r_req_i(r_req),
+    .r_data_o(r_data));
 
     // this test reads all memory positions starting from 0 and checks that they have the expected value, then does a full write and a full read
     always @(posedge clk) begin
@@ -69,16 +75,22 @@ module tb_vga_fontMem;
                 write_done <= 1'b1;
                 din <= 8'd0;
                 wr_en <= 1'b0;
+                r_req <= 1'b1;
             end
         end
         if (write_done) begin
-            if (dout != din) begin
-                $display("ERROR during final read at address %d dout %d din %d", addr, dout, din);
+            if (r_data != din) begin
+                $display("ERROR during final read at address %d r_data %d din %d", addr_r, r_data, din);
+                error <= 1'b1;
+            end
+            if (dout != 8'd0) begin 
+                $display("ERROR during final read, display output wasn't disabled at address %d r_data %d dout %d", addr, r_data, dout);
                 error <= 1'b1;
             end
             din <= din + 1;
+            addr_r <= addr_r + 1;
             addr <= addr + 1;
-            if (addr == 11'd2047) finish = 1'b1;    
+            if (addr_r == 11'd2047) finish = 1'b1;    
         end
     end 
 

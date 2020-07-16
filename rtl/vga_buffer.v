@@ -28,23 +28,32 @@ module vga_buffer
     input wire f_reset_i,                           // AXI reset
     input wire f_ready_i,                           // AXI read ready
     input wire clk_axi_i,                           // AXI clk
+    input wire [ADDR_WIDTH-1:0]         r_addr_i,   // read address
+`elsif TBSIM2
+    output reg [DATA_WIDTH-1:0]         r_data_o,   // data read for AXI
+    input wire [ADDR_WIDTH-1:0]         r_addr_i,   // read address
+    input wire                          r_req_i,    // read enable
 `endif
     input wire                          clk_i,      // 25 MHz clock
     input wire                          wr_en_i,    // write enable for the data input
     input wire [ADDR_WIDTH-1:0]         w_addr_i,   // write address from AXI
     input wire [C_AXI_DATA_WIDTH/8-1:0] w_strb_i,   // write strobe
-    input wire [ADDR_WIDTH-1:0]         r_addr_i,   // read address
-    input wire                          r_req_i,    // read enable
     input wire [ADDR_WIDTH-1:0]         vr_addr_i,  // vga read address for the display
     input wire [DATA_WIDTH-1:0]         din_i,      // data input, the ASCII code of the character
-    output reg [DATA_WIDTH-1:0]         dout_o,     // data output for the display
-    output reg [DATA_WIDTH-1:0]         r_data_o    // data read for AXI
-    
+    output reg [DATA_WIDTH-1:0]         dout_o     // data output for the display 
 );
  
     reg [DATA_WIDTH-1:0] bmem [0:NUM_ADDRS-1]; // memory of the current frame
 
 `ifdef TBSIM
+    // memory initialization
+    integer i;
+    initial begin
+        for (i=0; i<NUM_ADDRS;i=i+1) begin
+            bmem[i]=28'd0;
+        end
+    end
+`elsif TBSIM2
     // memory initialization
     integer i;
     initial begin
@@ -58,11 +67,6 @@ module vga_buffer
         if (r_req_i) begin
             r_data_o <= bmem[r_addr_i];
         end
-    end
-`else
-    // read for AXI
-    always @(posedge clk_i) begin
-        r_data_o <= 28'd0;
     end
 `endif
 

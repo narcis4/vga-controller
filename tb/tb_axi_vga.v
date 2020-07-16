@@ -77,7 +77,7 @@ module tb_axi_vga;
         read_timeout = 4'd0;
         read_data = 32'd0;
         read_data2 = 32'd0;
-        #1 s_axi_aresetn = 1'b1;
+        #41 s_axi_aresetn = 1'b1;
 
         // first write, address buffer 0, data 0xFFFFFFFF, strobe 1 (only writes the least significant byte)
         #14 s_axi_awaddr = 15'h4000;

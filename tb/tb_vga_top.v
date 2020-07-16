@@ -25,8 +25,8 @@ module tb_vga_top;
         $finish;
     end
 
-    // this test sends the characters 'A' and 'C' to write, then checks that the corresponding pixels of the screen are white and lastly, overwrites the first row
-    // of pixels of the character 'A' and checks it
+    // this test sends the characters 'A' and 'C' to write, then checks that the corresponding pixels of the screen are white, overwrites the first row
+    // of pixels of the character 'A' and checks it, writes and reads the color register and activated debug mode to read from the ROM memory
     initial begin
         // signal initialization
         clk = 1'b0;
@@ -261,16 +261,37 @@ module tb_vga_top;
             error = 1'b1;
         end
         #0.04 axil_wdata = 32'h00000000; // write the color 0
-        axil_waddr = 15'h2001; // second reg memory address (color red for characters)
+        axil_waddr = 15'h2004; // second reg memory address (red component for characters)
         axil_wready = 1'b1;
         #0.04 axil_wready = 1'b0;
-        $display("Color register write");
+        $display("Color register write and read");
         wait(pmod[7:0] == 8'h0F);
         #0.08 if (pmod[7:0] != 8'h0F) begin
             $display("ERROR 1");
             error = 1'b1;
         end
-        
+        #0.04 axil_raddr = 15'h2004;
+        axil_rreq = 1'b1;
+        #0.04 if (axil_rdata != 32'h00000000) begin
+            $display("ERROR 2");
+            error = 1'b1;
+        end
+        #0.04 axil_raddr = 15'h0000; // first ROM address
+        $display("Debug mode write and ROM read");
+        #0.04 if (axil_rdata != 32'h00000000) begin // check that data read is 0 when debug mode is OFF
+            $display("ERROR 1");
+            error = 1'b1;
+        end
+        #0.04 axil_wdata = 32'h00000001; // activate debug mode
+        axil_waddr = 15'h2018; 
+        axil_wready = 1'b1;
+        #0.04 axil_wready = 1'b0;
+        axil_raddr = 15'h0000;
+        #0.04 if (axil_rdata != 32'h000000FF) begin // check data read from the ROM
+            $display("ERROR 2");
+            error = 1'b1;
+        end
+        $display("END");
     end
         
     vga_top dut_vga_top( .clk_i(clk), .rstn_i(rstn), .PMOD(pmod), .axil_wdata_i(axil_wdata), .axil_wstrb_i(axil_wstrb), .axil_waddr_i(axil_waddr), 

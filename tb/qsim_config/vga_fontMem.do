@@ -10,10 +10,14 @@ add wave -noupdate -radix unsigned /tb_vga_fontMem/addr
 add wave -noupdate -radix hexadecimal /tb_vga_fontMem/dout
 add wave -noupdate -radix hexadecimal /tb_vga_fontMem/expected
 add wave -noupdate /tb_vga_fontMem/dut_vga_fontMem/mem
-add wave -noupdate -radix unsigned /tb_vga_fontMem/addr_w
 add wave -noupdate /tb_vga_fontMem/wr_en
+add wave -noupdate -radix unsigned /tb_vga_fontMem/addr_w
+add wave -noupdate -radix hexadecimal /tb_vga_fontMem/din
+add wave -noupdate /tb_vga_fontMem/r_req
+add wave -noupdate -radix unsigned /tb_vga_fontMem/addr_r
+add wave -noupdate -radix hexadecimal /tb_vga_fontMem/r_data
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {245091 ns} 0}
+WaveRestoreCursors {{Cursor 1} {201 ns} 0}
 quietly wave cursor active 1
 configure wave -namecolwidth 150
 configure wave -valuecolwidth 100

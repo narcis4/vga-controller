@@ -2,7 +2,7 @@
 
 if [ -z "$1" ]
 then 
-    iverilog -DTBSIM -o tb_axi_vga.x tb_axi_vga.v ../rtl/axi_vga.v ../rtl/vga_top.v ../rtl/vga_fontMem.v ../rtl/vga_buffer.v ../rtl/vga_syncGen.v
+    iverilog -DTBSIM2 -o tb_axi_vga.x tb_axi_vga.v ../rtl/axi_vga.v ../rtl/vga_top.v ../rtl/vga_fontMem.v ../rtl/vga_buffer.v ../rtl/vga_syncGen.v
     ./tb_axi_vga.x
     rm tb_axi_vga.x
     rm tb_axi_vga.vcd

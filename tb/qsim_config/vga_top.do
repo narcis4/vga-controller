@@ -2,7 +2,7 @@ vlib work
 vlog +acc "../../rtl/vga_syncGen.v"
 vlog +define+TBSIM +acc "../../rtl/vga_buffer.v"
 vlog +define+WAVE +acc "../../rtl/vga_fontMem.v"
-vlog +define+TBSIM +acc "../../rtl/vga_top.v"
+vlog +define+WAVE +acc "../../rtl/vga_top.v"
 vlog +acc "../tb_vga_top.v"
 vsim work.tb_vga_top
 onerror {resume}
@@ -38,6 +38,15 @@ add wave -noupdate /tb_vga_top/dut_vga_top/wr_en_rom
 add wave -noupdate -radix binary /tb_vga_top/dut_vga_top/char_sel
 add wave -noupdate -radix unsigned /tb_vga_top/dut_vga_top/w_addr_rom
 add wave -noupdate /tb_vga_top/dut_vga_top/w_data_rom
+add wave -noupdate /tb_vga_top/axil_rdata
+add wave -noupdate /tb_vga_top/dut_vga_top/r_en_rom
+add wave -noupdate -radix unsigned /tb_vga_top/dut_vga_top/r_addr_rom
+add wave -noupdate /tb_vga_top/dut_vga_top/r_data_rom
+add wave -noupdate /tb_vga_top/dut_vga_top/wr_en_regs
+add wave -noupdate /tb_vga_top/axil_wdata
+add wave -noupdate /tb_vga_top/dut_vga_top/red_color1
+add wave -noupdate /tb_vga_top/dut_vga_top/debug_mode
+add wave -noupdate /tb_vga_top/dut_vga_top/r_data_regs
 add wave -noupdate /tb_vga_top/dut_vga_top/vga_fontMem_inst/mem
 TreeUpdate [SetDefaultTree]
 WaveRestoreCursors {{Cursor 1} {0 ns} 0}

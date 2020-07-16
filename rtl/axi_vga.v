@@ -122,9 +122,16 @@ module axi_vga #(
 	// Write signaling
     //
 	reg	axil_awready; // Same as AWREADY
+
+`ifdef TBSIM2
+    initial begin
+        axil_awready = 1'b0;
+        axil_bvalid = 0;
+        axil_read_valid = 1'b0;
+    end
+`endif
     
     // Control of write ready, determines when the VGA is ready to accept a write transaction
-	initial	axil_awready = 1'b0;
 	always @(posedge S_AXI_ACLK) begin
 	    if (!S_AXI_ARESETN)
 		    axil_awready <= 1'b0;
@@ -160,7 +167,6 @@ module axi_vga #(
     end
 
     // Control of write acknowledgement, it is set to 1 when the VGA accepts a write transaction
-	initial	axil_bvalid = 0;
 	always @(posedge S_AXI_ACLK) begin
 	    if (i_reset)
 		    axil_bvalid <= 0;
@@ -187,7 +193,6 @@ module axi_vga #(
     assign  axil_read_req = (!S_AXI_RVALID || S_AXI_RREADY);
 
     // Control of read valid, it is set to 1 when the read data can be read by the master
-	initial	axil_read_valid = 1'b0;
 	always @(posedge S_AXI_ACLK) begin
 	    if (i_reset)
 		    axil_read_valid <= 1'b0;

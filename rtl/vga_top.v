@@ -149,7 +149,9 @@ module vga_top #(
     reg [COLOR_WIDTH-1:0] blue_color1;  
     reg [COLOR_WIDTH-1:0] green_color0; 
     reg [COLOR_WIDTH-1:0] green_color1; 
+    reg debug_mode;                     // If '1' VGA is in debug mode and ROM can be read for AXI (video output might not be accurate)
     reg wr_en_regs;                     // Write enable for the color registers
+    wire [COLOR_WIDTH-1:0] r_data_regs;
 
     // Control for the write enable
     always @(posedge clk_i, negedge rstn_i) begin
@@ -168,6 +170,7 @@ module vga_top #(
             blue_color1 <= 4'b1111;  // character color (white)
             green_color0 <= 4'b0000; // background color (black)
             green_color1 <= 4'b1111; // character color (white)
+            debug_mode <= 1'b0;      // debug mode OFF
         end
         else begin
             if (wr_en_regs) begin
@@ -178,10 +181,20 @@ module vga_top #(
                     3'b011: blue_color1 <= axil_wdata_i[COLOR_WIDTH-1:0];
                     3'b100: green_color0 <= axil_wdata_i[COLOR_WIDTH-1:0];
                     3'b101: green_color1 <= axil_wdata_i[COLOR_WIDTH-1:0];
+                    3'b110: debug_mode <= axil_wdata_i[0];
                 endcase
             end
         end
     end
+
+    // read from one of the color registers based on the AXI read address
+    assign r_data_regs = (axil_raddr_i[REG_ADDR_WIDTH-1:ADDRLSB] == 3'b000) ? red_color0 :
+           ((axil_raddr_i[REG_ADDR_WIDTH-1:ADDRLSB] == 3'b001) ? red_color1 :
+           ((axil_raddr_i[REG_ADDR_WIDTH-1:ADDRLSB] == 3'b010) ? blue_color0 :
+           ((axil_raddr_i[REG_ADDR_WIDTH-1:ADDRLSB] == 3'b011) ? blue_color1 :
+           ((axil_raddr_i[REG_ADDR_WIDTH-1:ADDRLSB] == 3'b100) ? green_color0 :
+           ((axil_raddr_i[REG_ADDR_WIDTH-1:ADDRLSB] == 3'b101) ? green_color1 : 
+           ((axil_raddr_i[REG_ADDR_WIDTH-1:ADDRLSB] == 3'b110) ? {3'd0, debug_mode} : 4'd0))))));
 
     wire [N_COL_WIDTH-1:0]   current_col; // column of the current tile
     wire [N_ROW_WIDTH-1:0]   current_row; // row of the current tile
@@ -222,45 +235,43 @@ module vga_top #(
     wire [BUF_ADDR_WIDTH-1:0] vr_addr_buffer; // vga address to read from the buffer
     wire [BUF_ADDR_WIDTH-1:0] w_addr_buffer;  // write address to the buffer
     wire [N_CHARS_WIDTH*4-1:0] w_data_buffer; // write data for the buffer
+`ifdef FORMAL
     wire [BUF_ADDR_WIDTH-1:0] r_addr_buffer;  // AXI read address for the buffer
+    assign r_addr_buffer = axil_raddr_i[AXI_ADDR_MSB-1:ADDRLSB];
+`elsif TBSIM2
     wire [N_CHARS_WIDTH*4-1:0] r_data_buffer; // AXI read data from the buffer
+    wire [BUF_ADDR_WIDTH-1:0] r_addr_buffer;  // AXI read address for the buffer
+    assign r_addr_buffer = axil_raddr_i[AXI_ADDR_MSB-1:ADDRLSB];
+`endif
     assign r_tile = current_row * N_COL + current_col;
     assign vr_addr_buffer = r_tile[N_TOT_WIDTH-1:ADDRLSB];
     assign w_addr_buffer = axil_waddr_i[AXI_ADDR_MSB-1:ADDRLSB];
     // select the least significant 7 bits from each group of 8 bits (discard the MSB from each byte)
     assign w_data_buffer = {axil_wdata_i[C_AXI_DATA_WIDTH-2-:N_CHARS_WIDTH], axil_wdata_i[C_AXI_DATA_WIDTH-2-(N_CHARS_WIDTH+1)-:N_CHARS_WIDTH],
            axil_wdata_i[C_AXI_DATA_WIDTH-2-(N_CHARS_WIDTH+1)*2-:N_CHARS_WIDTH], axil_wdata_i[C_AXI_DATA_WIDTH-2-(N_CHARS_WIDTH+1)*3-:N_CHARS_WIDTH]};
-    assign r_addr_buffer = axil_raddr_i[AXI_ADDR_MSB-1:ADDRLSB];
-`ifdef TBSIM
-    // pad the data read with a 0 before each group of 7 bits
-    assign axil_rdata_o = {1'b0, r_data_buffer[N_CHARS_WIDTH*4-1-:N_CHARS_WIDTH], 1'b0, r_data_buffer[N_CHARS_WIDTH*3-1-:N_CHARS_WIDTH],
-           1'b0, r_data_buffer[N_CHARS_WIDTH*2-1-:N_CHARS_WIDTH], 1'b0, r_data_buffer[N_CHARS_WIDTH-1:0]};
-`else
-    // read from one of the color registers based on the AXI read address
-    assign axil_rdata_o = (axil_raddr_i[REG_ADDR_WIDTH-1:ADDRLSB] == 3'b000) ? {28'd0, red_color0} :
-           ((axil_raddr_i[REG_ADDR_WIDTH-1:ADDRLSB] == 3'b001) ? {28'd0, red_color1} :
-           ((axil_raddr_i[REG_ADDR_WIDTH-1:ADDRLSB] == 3'b010) ? {28'd0, blue_color0} :
-           ((axil_raddr_i[REG_ADDR_WIDTH-1:ADDRLSB] == 3'b011) ? {28'd0, blue_color1} :
-           ((axil_raddr_i[REG_ADDR_WIDTH-1:ADDRLSB] == 3'b100) ? {28'd0, green_color0} :
-           ((axil_raddr_i[REG_ADDR_WIDTH-1:ADDRLSB] == 3'b101) ? {28'd0, green_color1} : 32'd0)))));
-`endif
-
 
 `ifdef FORMAL
     vga_buffer #(.C_AXI_ADDR_WIDTH(C_AXI_ADDR_WIDTH), .C_AXI_DATA_WIDTH(C_AXI_DATA_WIDTH))
-    vga_buffer_inst( .clk_i(clk25), .wr_en_i(wr_ena), .w_addr_i(w_addr_buffer), .w_strb_i(axil_wstrb_i), .r_addr_i(r_addr_buffer), .r_req_i(axil_rreq_i), 
-    .vr_addr_i(vr_addr_buffer), .din_i(axil_wdata_i), .dout_o(char_addr), .r_data_o(r_data_buffer), .f_rdata_i(f_rdata_i), 
+    vga_buffer_inst( .clk_i(clk25), .wr_en_i(wr_ena), .w_addr_i(w_addr_buffer), .w_strb_i(axil_wstrb_i), .r_addr_i(r_addr_buffer),
+    .vr_addr_i(vr_addr_buffer), .din_i(axil_wdata_i), .dout_o(char_addr), .f_rdata_i(f_rdata_i), 
     .f_past_valid_i(f_past_valid_i), .f_reset_i(f_reset_i), .f_ready_i(f_ready_i), .clk_axi_i(clk_i));
-`else
+`elsif TBSIM2
     vga_buffer #(.C_AXI_ADDR_WIDTH(C_AXI_ADDR_WIDTH), .C_AXI_DATA_WIDTH(C_AXI_DATA_WIDTH))
     vga_buffer_inst( .clk_i(clk25), .wr_en_i(wr_ena), .w_addr_i(w_addr_buffer), .w_strb_i(axil_wstrb_i), .r_addr_i(r_addr_buffer), .r_req_i(axil_rreq_i), 
     .vr_addr_i(vr_addr_buffer), .din_i(w_data_buffer), .dout_o(char_addr), .r_data_o(r_data_buffer));
+`else 
+    vga_buffer #(.C_AXI_ADDR_WIDTH(C_AXI_ADDR_WIDTH), .C_AXI_DATA_WIDTH(C_AXI_DATA_WIDTH))
+    vga_buffer_inst( .clk_i(clk25), .wr_en_i(wr_ena), .w_addr_i(w_addr_buffer), .w_strb_i(axil_wstrb_i),
+    .vr_addr_i(vr_addr_buffer), .din_i(w_data_buffer), .dout_o(char_addr));
 `endif
     
     wire [ROM_ADDR_WIDTH-1:0] w_addr_rom; // write address to the bitmap memory
     reg wr_en_rom;                        // write enable for the bitmap memory
     wire [0:C_WIDTH-1] w_data_rom;        // write data to the bitmap memory
     wire [ADDRLSB-1:0] char_sel;          // the specific character of the group of 4 to be read for the display
+    wire [0:C_WIDTH-1] r_data_rom;     
+    wire r_en_rom;
+    wire [ROM_ADDR_WIDTH-1:0] r_addr_rom;
     // Write the bitmap memory if the VGA is ready and the address is in the correct range
     always @(posedge clk_i, negedge rstn_i) begin
         if (~rstn_i) begin
@@ -275,8 +286,21 @@ module vga_top #(
     assign w_addr_rom = axil_waddr_i[AXI_ADDR_MSB-2:ADDRLSB]; 
     assign w_data_rom = axil_wdata_i[C_WIDTH-1:0]; // write only the least significant byte of the data
     assign font_in = {1'b0, char_addr[char_sel*7+:7], y_img};
+    assign r_en_rom = axil_rreq_i & debug_mode & (~axil_raddr_i[AXI_ADDR_MSB]) & (~axil_raddr_i[AXI_ADDR_MSB-1]);
+    assign r_addr_rom = axil_raddr_i[AXI_ADDR_MSB-2:ADDRLSB];
 
-    vga_fontMem vga_fontMem_inst( .clk_i(clk25), .addr_i(font_in), .dout_o(char), .addr_w_i(w_addr_rom), .wr_en_i(wr_en_rom), .din_i(w_data_rom));
+    vga_fontMem vga_fontMem_inst( .clk_i(clk25), .addr_i(font_in), .dout_o(char), .addr_w_i(w_addr_rom), .wr_en_i(wr_en_rom), .din_i(w_data_rom),
+                .addr_r_i(r_addr_rom), .r_req_i(r_en_rom), .r_data_o(r_data_rom));
+
+`ifdef TBSIM2
+    // pad the data read with a 0 before each group of 7 bits
+    assign axil_rdata_o = {1'b0, r_data_buffer[N_CHARS_WIDTH*4-1-:N_CHARS_WIDTH], 1'b0, r_data_buffer[N_CHARS_WIDTH*3-1-:N_CHARS_WIDTH],
+           1'b0, r_data_buffer[N_CHARS_WIDTH*2-1-:N_CHARS_WIDTH], 1'b0, r_data_buffer[N_CHARS_WIDTH-1:0]};
+`else
+    // read from the color registers or from the ROM (also needs debug mode ON) based on the address
+    assign axil_rdata_o = axil_raddr_i[AXI_ADDR_MSB-1] ? {28'd0, r_data_regs} : (debug_mode ? {24'd0, r_data_rom} : 32'd0);
+`endif
+
 
     //Update next pixel color
     always @(posedge clk_i, negedge rstn_i) begin

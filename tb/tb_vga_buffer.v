@@ -7,8 +7,6 @@ module tb_vga_buffer;
     reg wr_en;
     reg [10-1:0] w_addr_i;   
     reg [32/8-1:0] w_strb_i;
-    reg [10-1:0] r_addr_i;
-    reg r_req_i;
     reg [9:0] vr_addr;
     reg [28-1:0] din;  
     wire [28-1:0] dout;
@@ -33,8 +31,6 @@ module tb_vga_buffer;
         clk = 1'b0;
         w_addr_i = 10'd0;
         w_strb_i = 4'b1111;
-        r_addr_i = 10'd0;
-        r_req_i = 1'b0;
         vr_addr = 10'd0;
         din = 28'd0;
         wr_en = 1'b1;
@@ -48,7 +44,7 @@ module tb_vga_buffer;
         fin = 1'b0;
     end
         
-    vga_buffer dut_vga_buffer( .clk_i(clk), .wr_en_i(wr_en), .w_addr_i(w_addr_i), .w_strb_i(w_strb_i), .r_addr_i(r_addr_i), .r_req_i(r_req_i), 
+    vga_buffer dut_vga_buffer( .clk_i(clk), .wr_en_i(wr_en), .w_addr_i(w_addr_i), .w_strb_i(w_strb_i),
 .vr_addr_i(vr_addr), .din_i(din), .dout_o(dout));
 
     // this test does a initialization read, writes every tile in groups of 4 at the same time with increasing numbers starting from 0, then reads 
