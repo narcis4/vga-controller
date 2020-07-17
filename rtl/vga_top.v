@@ -212,7 +212,7 @@ module vga_top #(
     wire [C_ADDR_WIDTH-1:0]  x_img; // indicate X position inside the tile (0-7)
     wire [C_ADDR_HEIGHT-1:0] y_img; // inidicate Y position inside the tile (0-15)
     // similar as hmem, we need to load the pixel 1 cycle earlier, so we adjust the fetch to be 1 ahead
-    assign x_img = x_px[C_ADDR_WIDTH-1:0];
+    assign x_img = x_px[C_ADDR_WIDTH-1:0] + 1;
     // update y_img 1 cycle before to fetch the proper line in font memory
     assign y_img = (hc == H_BLACK-1 || hc == H_BLACK) ? vmem[C_ADDR_HEIGHT-1:0] : y_px[C_ADDR_HEIGHT-1:0];
 
