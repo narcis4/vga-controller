@@ -202,9 +202,9 @@ module vga_top #(
     wire [N_PIXEL_WIDTH-1:0] vmem;        // adjusted current y position of the pixel
 
     // register must be loaded 2 cycles before access, so we adjust the addr to be 2 px ahead
-    assign hmem = (hc >= H_PIXELS-1) ? hc - H_BLACK : (hc >= H_BLACK-2) ? hc + 2 - H_BLACK : 0;
+    assign hmem = (hc >= H_PIXELS-1) ? hc - H_BLACK : (hc >= H_BLACK-3) ? hc + 3 - H_BLACK : 0;
     // x_px and y_px are 0 when !activevideo, so we need to adjust the vertical pixel too for the first character
-    assign vmem = (hc == H_BLACK-2 || hc == H_BLACK-1 || hc == H_BLACK) ? vc - V_BLACK : y_px;
+    assign vmem = (hc == H_BLACK-3 || hc == H_BLACK-2 || hc == H_BLACK-1 || hc == H_BLACK) ? vc - V_BLACK : y_px;
 
     assign current_col = hmem[N_PIXEL_WIDTH-1:C_ADDR_WIDTH]; 
     assign current_row = vmem[N_PIXEL_WIDTH-1:C_ADDR_HEIGHT]; 
@@ -214,7 +214,7 @@ module vga_top #(
     // similar as hmem, we need to load the pixel 1 cycle earlier, so we adjust the fetch to be 1 ahead
     assign x_img = x_px[C_ADDR_WIDTH-1:0] + 1;
     // update y_img 1 cycle before to fetch the proper line in font memory
-    assign y_img = (hc == H_BLACK-1) ? vmem[C_ADDR_HEIGHT-1:0] : y_px[C_ADDR_HEIGHT-1:0];
+    assign y_img = (hc == H_BLACK-2 || hc == H_BLACK-1) ? vmem[C_ADDR_HEIGHT-1:0] : y_px[C_ADDR_HEIGHT-1:0];
 
     wire [N_CHARS_WIDTH*4-1:0]             char_addr; // address of 4 characters in the bitmap, ASCII code
     wire [0:C_WIDTH-1]                     char;      // bitmap of 1 row of a character
@@ -272,6 +272,8 @@ module vga_top #(
     wire [0:C_WIDTH-1] r_data_rom;     
     wire r_en_rom;
     wire [ROM_ADDR_WIDTH-1:0] r_addr_rom;
+    wire [N_PIXEL_WIDTH-1:0] hmem_rom;
+    wire [N_TOT_WIDTH-1:0] r_tile_rom;
     // Write the bitmap memory if the VGA is ready and the address is in the correct range
     always @(posedge clk_i, negedge rstn_i) begin
         if (~rstn_i) begin
@@ -281,8 +283,11 @@ module vga_top #(
             wr_en_rom <= axil_wready_i & (~axil_waddr_i[AXI_ADDR_MSB]) & (~axil_waddr_i[AXI_ADDR_MSB-1]) & axil_wstrb_i[0];
         end
     end
-
-    assign char_sel = r_tile[ADDRLSB-1:0];
+    
+    assign hmem_rom = (hc >= H_PIXELS-1) ? hc - H_BLACK : (hc >= H_BLACK-2) ? hc + 2 - H_BLACK : 0;
+    assign r_tile_rom = current_row * N_COL + hmem_rom[N_PIXEL_WIDTH-1:C_ADDR_WIDTH];
+    //assign char_sel = r_tile[ADDRLSB-1:0];
+    assign char_sel = r_tile_rom[ADDRLSB-1:0];
     assign w_addr_rom = axil_waddr_i[AXI_ADDR_MSB-2:ADDRLSB]; 
     assign w_data_rom = axil_wdata_i[C_WIDTH-1:0]; // write only the least significant byte of the data
     assign font_in = {1'b0, char_addr[char_sel*7+:7], y_img};

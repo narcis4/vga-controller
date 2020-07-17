@@ -227,7 +227,7 @@ module tb_vga_top;
             error = 1'b1;
         end
         #0.04 axil_wdata = 32'h000000FF; // write all the pixels to 1
-        axil_waddr = 15'h0000; // first rom memory address
+        axil_waddr = 15'h1040; // first rom memory address
         axil_wready = 1'b1;
         #0.04 axil_wready = 1'b0;
         $display("ROM memory overwrite");
@@ -266,7 +266,7 @@ module tb_vga_top;
         #0.04 axil_wready = 1'b0;
         $display("Color register write and read");
         wait(pmod[7:0] == 8'h0F);
-        #0.08 if (pmod[7:0] != 8'h0F) begin
+        #31.97 if (pmod[7:0] != 8'h0F) begin
             $display("ERROR 1");
             error = 1'b1;
         end
@@ -286,7 +286,7 @@ module tb_vga_top;
         axil_waddr = 15'h2018; 
         axil_wready = 1'b1;
         #0.04 axil_wready = 1'b0;
-        axil_raddr = 15'h0000;
+        axil_raddr = 15'h1040;
         #0.04 if (axil_rdata != 32'h000000FF) begin // check data read from the ROM
             $display("ERROR 2");
             error = 1'b1;
