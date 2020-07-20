@@ -231,7 +231,7 @@ module tb_vga_top;
         axil_wready = 1'b1;
         #0.04 axil_wready = 1'b0;
         $display("ROM memory overwrite");
-        wait(pmod[7:0] == 8'hFF); // wait for the next white pixel and check that the next 7 are also white
+        #100 wait(pmod[7:0] == 8'hFF); // wait for the next white pixel and check that the next 7 are also white
         #0.04 if (pmod[7:0] != 8'hFF) begin
             $display("ERROR 1");
             error = 1'b1;
@@ -265,7 +265,7 @@ module tb_vga_top;
         axil_wready = 1'b1;
         #0.04 axil_wready = 1'b0;
         $display("Color register write and read");
-        wait(pmod[7:0] == 8'h0F);
+        #63.7 wait(pmod[7:0] == 8'h0F);
         #31.97 if (pmod[7:0] != 8'h0F) begin
             $display("ERROR 1");
             error = 1'b1;
