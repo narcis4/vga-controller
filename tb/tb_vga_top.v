@@ -35,7 +35,7 @@ module tb_vga_top;
         #0.005 rstn = 1'b1;
         // send the address 0 for the first column and row of the screen and the data for the character 'A'
         axil_wdata = 32'd65; // 'A' in ASCII
-        axil_wstrb = 4'b0001;
+        axil_wstrb = 4'b1111;
         axil_waddr = 15'h4000; // first buffer address
         axil_wready = 1'b1;
         axil_rreq = 1'b0;
@@ -43,7 +43,7 @@ module tb_vga_top;
         error = 1'b0;
         #0.020 axil_wready = 1'b0;
         // send the address of the last tile and the data for the character 'C'
-        #0.04 axil_wdata = 32'd67; // 'C' in ASCII
+        #0.04 axil_wdata = 32'h43000000; // 'C' in ASCII
         axil_waddr = 15'h495F; // 4096 + 2399
         axil_wready = 1'b1;
         #0.04 axil_wready = 1'b0;
@@ -231,7 +231,7 @@ module tb_vga_top;
         axil_wready = 1'b1;
         #0.04 axil_wready = 1'b0;
         $display("ROM memory overwrite");
-        #100 wait(pmod[7:0] == 8'hFF); // wait for the next white pixel and check that the next 7 are also white
+        wait(pmod[7:0] == 8'hFF); // wait for the next white pixel and check that the next 7 are also white
         #0.04 if (pmod[7:0] != 8'hFF) begin
             $display("ERROR 1");
             error = 1'b1;
@@ -265,7 +265,7 @@ module tb_vga_top;
         axil_wready = 1'b1;
         #0.04 axil_wready = 1'b0;
         $display("Color register write and read");
-        #63.7 wait(pmod[7:0] == 8'h0F);
+        wait(pmod[7:0] == 8'h0F);
         #31.97 if (pmod[7:0] != 8'h0F) begin
             $display("ERROR 1");
             error = 1'b1;

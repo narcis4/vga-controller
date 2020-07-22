@@ -202,9 +202,9 @@ module vga_top #(
     wire [N_PIXEL_WIDTH-1:0] vmem;        // adjusted current y position of the pixel
 
     // register must be loaded 2 cycles before access, so we adjust the addr to be 2 px ahead
-    assign hmem = (hc >= H_PIXELS-1) ? hc - H_BLACK : (hc >= H_BLACK-2) ? hc + 2 - H_BLACK : 0;
+    assign hmem = (hc >= H_PIXELS-3) ? hc - H_BLACK : (hc >= H_BLACK-3) ? hc + 3 - H_BLACK : 0;
     // x_px and y_px are 0 when !activevideo, so we need to adjust the vertical pixel too for the first character
-    assign vmem = (hc == H_BLACK-2 || hc == H_BLACK-1 || hc == H_BLACK) ? vc - V_BLACK : y_px;
+    assign vmem = (hc == H_BLACK-3 || hc == H_BLACK-2 || hc == H_BLACK-1 || hc == H_BLACK) ? vc - V_BLACK : y_px;
 
     assign current_col = hmem[N_PIXEL_WIDTH-1:C_ADDR_WIDTH]; 
     assign current_row = vmem[N_PIXEL_WIDTH-1:C_ADDR_HEIGHT]; 
@@ -212,9 +212,9 @@ module vga_top #(
     wire [C_ADDR_WIDTH-1:0]  x_img; // indicate X position inside the tile (0-7)
     wire [C_ADDR_HEIGHT-1:0] y_img; // inidicate Y position inside the tile (0-15)
     // similar as hmem, we need to load the pixel 1 cycle earlier, so we adjust the fetch to be 1 ahead
-    assign x_img = x_px[C_ADDR_WIDTH-1:0] + 1;
+    assign x_img = (hc >= H_BLACK) ? x_px[C_ADDR_WIDTH-1:0] + 2 : 0;
     // update y_img 1 cycle before to fetch the proper line in font memory
-    assign y_img = (hc == H_BLACK-1 || hc == H_BLACK) ? vmem[C_ADDR_HEIGHT-1:0] : y_px[C_ADDR_HEIGHT-1:0];
+    assign y_img = (hc == H_BLACK-2 || hc == H_BLACK-1 || hc == H_BLACK) ? vmem[C_ADDR_HEIGHT-1:0] : y_px[C_ADDR_HEIGHT-1:0];
 
     wire [N_CHARS_WIDTH*4-1:0]             char_addr; // address of 4 characters in the bitmap, ASCII code
     wire [0:C_WIDTH-1]                     char;      // bitmap of 1 row of a character
@@ -284,7 +284,7 @@ module vga_top #(
         end
     end
     
-    assign hmem_rom = (hc >= H_PIXELS-1) ? hc - H_BLACK : (hc >= H_BLACK-1) ? hc + 1 - H_BLACK : 0;
+    assign hmem_rom = (hc >= H_PIXELS-1) ? hc - H_BLACK : (hc >= H_BLACK-2) ? hc + 2 - H_BLACK : 0;
     assign r_tile_rom = current_row * N_COL + hmem_rom[N_PIXEL_WIDTH-1:C_ADDR_WIDTH];
     //assign char_sel = r_tile[ADDRLSB-1:0];
     assign char_sel = r_tile_rom[ADDRLSB-1:0];
@@ -322,6 +322,11 @@ module vga_top #(
                     R_int <= char[x_img] ? red_color1 : red_color0; // paint white if pixel from the bitmap is active, black otherwise
                     G_int <= char[x_img] ? green_color1 : green_color0; 
                     B_int <= char[x_img] ? blue_color1 : blue_color0; 
+            end
+            else begin
+                R_int <= red_color0;
+                G_int <= green_color0;
+                B_int <= blue_color0;
             end
         end
     end
