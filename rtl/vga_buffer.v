@@ -8,7 +8,7 @@
 
 `default_nettype none
 
-// Screen buffer divided in 600 memory positions of 28 bits each representing 4x7 bit address of the characters stored in the tiles (80x30 = 2400 characters total)
+// Screen buffer divided in 600 memory positions of 28 bits each representing 4x7 bit address of the bitmap patterns stored in the tiles (80x30 = 2400 characters total)
 module vga_buffer 
 #(
     parameter H_TILES = 640/8,                      // 640x480 resolution and chars of 8x16 pixels
@@ -19,7 +19,7 @@ module vga_buffer
     parameter SINGLE_DATA = 7,                      // log2(128)
     parameter ADDR_WIDTH = 10,                      // log2(600)
     parameter C_AXI_DATA_WIDTH = 32,                // Width of the AXI-lite bus
-    parameter C_AXI_ADDR_WIDTH = 13                 // AXI addr width based on the number of registers
+    parameter C_AXI_ADDR_WIDTH = 13                 // AXI addr width based on the number of positions
 )
 (
 `ifdef FORMAL
@@ -39,11 +39,11 @@ module vga_buffer
     input wire [ADDR_WIDTH-1:0]         w_addr_i,   // write address from AXI
     input wire [C_AXI_DATA_WIDTH/8-1:0] w_strb_i,   // write strobe
     input wire [ADDR_WIDTH-1:0]         vr_addr_i,  // vga read address for the display
-    input wire [DATA_WIDTH-1:0]         din_i,      // data input, the ASCII code of the character
-    output reg [DATA_WIDTH-1:0]         dout_o     // data output for the display 
+    input wire [DATA_WIDTH-1:0]         din_i,      // data to write
+    output reg [DATA_WIDTH-1:0]         dout_o      // data output for the display 
 );
  
-    reg [DATA_WIDTH-1:0] bmem [0:NUM_ADDRS-1]; // memory of the current frame
+    reg [DATA_WIDTH-1:0] bmem [0:NUM_ADDRS-1]; // dual-port memory of the current frame
 
 `ifdef TBSIM
     // memory initialization

@@ -13,7 +13,7 @@
 module vga_top #(
     parameter C_AXI_DATA_WIDTH = 32,                // Width of the AXI-lite bus
     parameter C_AXI_ADDR_WIDTH = 15,                // AXI addr width based on the number of registers
-    parameter ADDRLSB = $clog2(C_AXI_DATA_WIDTH)-3  // Least significant bits from address not used due to write strobes
+    parameter ADDRLSB = $clog2(C_AXI_DATA_WIDTH)-3  // Least significant bits from address not used to align accesses to 4 bytes
 )
 (
 `ifdef FORMAL
@@ -24,14 +24,14 @@ module vga_top #(
 `endif
     input wire                          clk_i,	       // 25MHz clock input
     input wire                          rstn_i,        // Active low reset signal
-    output wire [15:0]                  PMOD,          // VGA PMOD
+    output wire [15:0]                  PMOD,          // VGA PMOD display output
     input wire [C_AXI_DATA_WIDTH-1:0]   axil_wdata_i,  // AXI write data
     input wire [C_AXI_DATA_WIDTH/8-1:0] axil_wstrb_i,  // AXI write strobe
     input wire [C_AXI_ADDR_WIDTH-1:0]   axil_waddr_i,  // AXI write address
     input wire                          axil_wready_i, // AXI address write ready
     input wire                          axil_rreq_i,   // Determines when the VGA reads from the registers
     input wire [C_AXI_ADDR_WIDTH-1:0]   axil_raddr_i,  // AXI read address
-    output wire [C_AXI_DATA_WIDTH-1:0]  axil_rdata_o   // Data read from the registers
+    output wire [C_AXI_DATA_WIDTH-1:0]  axil_rdata_o   // Data read
   );
 
 //--------------------
@@ -74,7 +74,7 @@ module vga_top #(
     wire G0, G1, G2, G3; // green
     wire B0, B1, B2, B3; // blue
     wire HS,VS;          // horizontal and vertical sync
-    //wire rstn;
+
     //pmod1
     assign PMOD[0] = B0;
     assign PMOD[1] = B1;
@@ -96,14 +96,11 @@ module vga_top #(
     
 `ifdef FPGA
     wire clk25;
-    clk_wiz_0 instance_name
+    clk_wiz_0 instance_name // Vivado clock wizard instance for PLL in the KC705
    (
-    // Clock out ports
-    .clk_out1(clk25),     // output clk_out1
-    // Status and control signals
-    .resetn(rstn_i), // input resetn
-   // Clock in ports
-    .clk_in1(clk_i));      // input clk_in1
+    .clk_out1(clk25), // 25Mhz output clock
+    .resetn(rstn_i),
+    .clk_in1(clk_i)); // 50Mhz input clock
 `else
     reg clk25 = 1'b0; // 25 Mhz clock
     // Divide the 50 Mhz clock to generate the 25 Mhz one
@@ -150,10 +147,10 @@ module vga_top #(
     reg [COLOR_WIDTH-1:0] green_color0; 
     reg [COLOR_WIDTH-1:0] green_color1; 
     reg debug_mode;                     // If '1' VGA is in debug mode and ROM can be read for AXI (video output might not be accurate)
-    reg wr_en_regs;                     // Write enable for the color registers
-    wire [COLOR_WIDTH-1:0] r_data_regs;
+    reg wr_en_regs;                     // Write enable for the configuration registers
+    wire [COLOR_WIDTH-1:0] r_data_regs; // read data from configuration registers
 
-    // Control for the write enable
+    // Control for the configuration registers write enable, checks write ready and address range
     always @(posedge clk_i, negedge rstn_i) begin
         if (~rstn_i)
             wr_en_regs <= 0;
@@ -161,7 +158,7 @@ module vga_top #(
             wr_en_regs <= axil_wready_i & (~axil_waddr_i[AXI_ADDR_MSB]) & axil_waddr_i[AXI_ADDR_MSB-1] & axil_wstrb_i[0];
     end
 
-    // Color registers reset and write
+    // Configuration registers reset and write
     always @(posedge clk_i, negedge rstn_i) begin
         if (~rstn_i) begin
             red_color0 <= 4'b0000;   // background color (black)
@@ -200,25 +197,27 @@ module vga_top #(
     wire [N_ROW_WIDTH-1:0]   current_row; // row of the current tile
     wire [N_PIXEL_WIDTH-1:0] hmem;        // adjusted current x position of the pixel
     wire [N_PIXEL_WIDTH-1:0] vmem;        // adjusted current y position of the pixel
+    wire [C_ADDR_WIDTH-1:0]  x_img;       // indicate X position inside the tile (0-7)
+    wire [C_ADDR_HEIGHT-1:0] y_img;       // inidicate Y position inside the tile (0-15)
 
-    // register must be loaded 2 cycles before access, so we adjust the addr to be 2 px ahead
+    // register must be loaded 3 cycles before access, so we adjust the addr to be 3 px ahead
     assign hmem = (hc >= H_PIXELS-3) ? hc - H_BLACK : (hc >= H_BLACK-3) ? hc + 3 - H_BLACK : 0;
-    // x_px and y_px are 0 when !activevideo, so we need to adjust the vertical pixel too for the first character
+    // x_px and y_px are 0 when !activevideo, so we need to adjust the vertical pixel too to load the first character
     assign vmem = (hc == H_BLACK-3 || hc == H_BLACK-2 || hc == H_BLACK-1 || hc == H_BLACK) ? vc - V_BLACK : y_px;
-
     assign current_col = hmem[N_PIXEL_WIDTH-1:C_ADDR_WIDTH]; 
     assign current_row = vmem[N_PIXEL_WIDTH-1:C_ADDR_HEIGHT]; 
-    // x_img and y_img are used to index within the look up
-    wire [C_ADDR_WIDTH-1:0]  x_img; // indicate X position inside the tile (0-7)
-    wire [C_ADDR_HEIGHT-1:0] y_img; // inidicate Y position inside the tile (0-15)
-    // similar as hmem, we need to load the pixel 1 cycle earlier, so we adjust the fetch to be 1 ahead
+    // similar as hmem, we need to load the pixel 2 cycle earlier, so we adjust the fetch to be 2 ahead
     assign x_img = (hc >= H_BLACK) ? x_px[C_ADDR_WIDTH-1:0] + 2 : 0;
-    // update y_img 1 cycle before to fetch the proper line in font memory
+    // update y_img 2 cycle before to fetch the proper line in font memory
     assign y_img = (hc == H_BLACK-2 || hc == H_BLACK-1 || hc == H_BLACK) ? vmem[C_ADDR_HEIGHT-1:0] : y_px[C_ADDR_HEIGHT-1:0];
 
-    wire [N_CHARS_WIDTH*4-1:0]             char_addr; // address of 4 characters in the bitmap, ASCII code
-    wire [0:C_WIDTH-1]                     char;      // bitmap of 1 row of a character
-    wire [N_CHARS_WIDTH+C_ADDR_HEIGHT-1:0] font_in;   // address for access to the font memory, concatenation of 1 character address and a row number
+    wire [N_CHARS_WIDTH*4-1:0]             char_addr;      // address of 4 characters in the bitmap
+    wire [0:C_WIDTH-1]                     char;           // bitmap of 1 row of a character
+    wire [N_CHARS_WIDTH+C_ADDR_HEIGHT-1:0] font_in;        // address for access to the font memory, concatenation of 1 character address and a row number
+    wire [N_TOT_WIDTH-1:0]                 r_tile;         // number of the tile to be accessed
+    wire [BUF_ADDR_WIDTH-1:0]              vr_addr_buffer; // vga address to read from the buffer
+    wire [BUF_ADDR_WIDTH-1:0]              w_addr_buffer;  // write address to the buffer
+    wire [N_CHARS_WIDTH*4-1:0]             w_data_buffer;  // write data for the buffer
 
     reg wr_ena; // Write enable for the buffer
     // Write to the buffer if we are ready and the address is in the buffer range
@@ -269,11 +268,12 @@ module vga_top #(
     reg wr_en_rom;                        // write enable for the bitmap memory
     wire [0:C_WIDTH-1] w_data_rom;        // write data to the bitmap memory
     wire [ADDRLSB-1:0] char_sel;          // the specific character of the group of 4 to be read for the display
-    wire [0:C_WIDTH-1] r_data_rom;     
-    wire r_en_rom;
-    wire [ROM_ADDR_WIDTH-1:0] r_addr_rom;
-    wire [N_PIXEL_WIDTH-1:0] hmem_rom;
-    wire [N_TOT_WIDTH-1:0] r_tile_rom;
+    wire [0:C_WIDTH-1] r_data_rom;        // read data from the bitmap memory
+    wire r_en_rom;                        // read enable for the bitmap memory
+    wire [ROM_ADDR_WIDTH-1:0] r_addr_rom; // read address for the bitmap memory
+    wire [N_PIXEL_WIDTH-1:0] hmem_rom;    // adjusted horizontal counter for the bitmap memory
+    wire [N_TOT_WIDTH-1:0] r_tile_rom;    // adjusted tile number for the bitmap memory
+
     // Write the bitmap memory if the VGA is ready and the address is in the correct range
     always @(posedge clk_i, negedge rstn_i) begin
         if (~rstn_i) begin
@@ -284,12 +284,13 @@ module vga_top #(
         end
     end
     
+    // register must be loaded 2 cycles before to be ready, so we advance the counter
     assign hmem_rom = (hc >= H_PIXELS-1) ? hc - H_BLACK : (hc >= H_BLACK-2) ? hc + 2 - H_BLACK : 0;
     assign r_tile_rom = current_row * N_COL + hmem_rom[N_PIXEL_WIDTH-1:C_ADDR_WIDTH];
-    //assign char_sel = r_tile[ADDRLSB-1:0];
     assign char_sel = r_tile_rom[ADDRLSB-1:0];
     assign w_addr_rom = axil_waddr_i[AXI_ADDR_MSB-2:ADDRLSB]; 
-    assign w_data_rom = axil_wdata_i[C_WIDTH-1:0]; // write only the least significant byte of the data
+    assign w_data_rom = axil_wdata_i[C_WIDTH-1:0];
+    // concatenate the address of the character with current line to get the bitmap memory adress
     assign font_in = {1'b0, char_addr[char_sel*7+:7], y_img};
     assign r_en_rom = axil_rreq_i & debug_mode & (~axil_raddr_i[AXI_ADDR_MSB]) & (~axil_raddr_i[AXI_ADDR_MSB-1]);
     assign r_addr_rom = axil_raddr_i[AXI_ADDR_MSB-2:ADDRLSB];
@@ -302,12 +303,12 @@ module vga_top #(
     assign axil_rdata_o = {1'b0, r_data_buffer[N_CHARS_WIDTH*4-1-:N_CHARS_WIDTH], 1'b0, r_data_buffer[N_CHARS_WIDTH*3-1-:N_CHARS_WIDTH],
            1'b0, r_data_buffer[N_CHARS_WIDTH*2-1-:N_CHARS_WIDTH], 1'b0, r_data_buffer[N_CHARS_WIDTH-1:0]};
 `else
-    // read from the color registers or from the ROM (also needs debug mode ON) based on the address
+    // read from the configuration registers or from the bitmap memory (also needs debug mode ON) based on the address
     assign axil_rdata_o = axil_raddr_i[AXI_ADDR_MSB-1] ? {28'd0, r_data_regs} : (debug_mode ? {24'd0, r_data_rom} : 32'd0);
 `endif
 
 
-    //Update next pixel color
+    //Update next pixel color registers, paint character colour if the bit is 1 and we are in activevideo zone; otherwise background colour
     always @(posedge clk_i, negedge rstn_i) begin
         if (~rstn_i) begin
                 R_int <= 4'b0;
@@ -315,11 +316,8 @@ module vga_top #(
                 B_int <= 4'b0;
         end 
         else begin
-        //remember that there is a section outside the screen
-        //if We don't use the active video pixel value will increase in the 
-        //section outside the display as well.
             if (activevideo) begin
-                    R_int <= char[x_img] ? red_color1 : red_color0; // paint white if pixel from the bitmap is active, black otherwise
+                    R_int <= char[x_img] ? red_color1 : red_color0;
                     G_int <= char[x_img] ? green_color1 : green_color0; 
                     B_int <= char[x_img] ? blue_color1 : blue_color0; 
             end
