@@ -107,6 +107,7 @@ module axi_vga #(
 	wire				            axil_read_ready;  // The VGA is about to read the ARADDR
 	wire [C_AXI_ADDR_WIDTH-1:0]     arskd_addr;       // Same as ARADDR
 	wire [C_AXI_DATA_WIDTH-1:0]	    axil_read_data;   // Same as RDATA
+    reg [C_AXI_DATA_WIDTH-1:0]      reg_read_data;    // RDATA register
 	reg				                axil_read_valid;  // Same as RVALID
 
     wire axil_read_req;                               // The VGA is about to read from the registers into RDATA
@@ -200,8 +201,15 @@ module axi_vga #(
 		    axil_read_valid <= 1'b0;
     end
 
+    always @(posedge S_AXI_ACLK) begin
+        if (!S_AXI_ARESETN)
+		    reg_read_data <= 0;
+	    else if (!S_AXI_RVALID || S_AXI_RREADY)
+            reg_read_data <= axil_read_data;
+    end
+		    
 	assign	S_AXI_RVALID = axil_read_valid;
-	assign	S_AXI_RDATA  = axil_read_data;
+	assign	S_AXI_RDATA  = reg_read_data;
 	assign	S_AXI_RRESP = 2'b00;
 
 	// Verilator lint_off UNUSED

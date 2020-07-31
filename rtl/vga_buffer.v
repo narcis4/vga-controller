@@ -28,7 +28,9 @@ module vga_buffer
     input wire f_reset_i,                           // AXI reset
     input wire f_ready_i,                           // AXI read ready
     input wire clk_axi_i,                           // AXI clk
+    output reg [DATA_WIDTH-1:0]         r_data_o,   // data read for AXI
     input wire [ADDR_WIDTH-1:0]         r_addr_i,   // read address
+    input wire                          r_req_i,    // read enable
 `elsif TBSIM2
     output reg [DATA_WIDTH-1:0]         r_data_o,   // data read for AXI
     input wire [ADDR_WIDTH-1:0]         r_addr_i,   // read address
@@ -83,6 +85,22 @@ module vga_buffer
     end
   
 `ifdef FORMAL
+
+    // memory initialization
+    integer i;
+    initial begin
+        for (i=0; i<NUM_ADDRS;i=i+1) begin
+            bmem[i]=28'd0;
+        end
+    end
+    
+    // read for AXI
+    always @(posedge clk_i) begin
+        if (r_req_i) begin
+            r_data_o <= bmem[r_addr_i];
+        end
+    end
+    
     wire [31:0] ref_data;
     // Each 7 bit character address is padded with a 0 to reach the 32 bit width of the axi bus
     assign ref_data = {1'b0, bmem[r_addr_i][SINGLE_DATA*4-1:SINGLE_DATA*3], 1'b0, bmem[r_addr_i][SINGLE_DATA*3-1:SINGLE_DATA*2],

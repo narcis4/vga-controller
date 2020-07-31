@@ -214,10 +214,6 @@ module vga_top #(
     wire [N_CHARS_WIDTH*4-1:0]             char_addr;      // address of 4 characters in the bitmap
     wire [0:C_WIDTH-1]                     char;           // bitmap of 1 row of a character
     wire [N_CHARS_WIDTH+C_ADDR_HEIGHT-1:0] font_in;        // address for access to the font memory, concatenation of 1 character address and a row number
-    wire [N_TOT_WIDTH-1:0]                 r_tile;         // number of the tile to be accessed
-    wire [BUF_ADDR_WIDTH-1:0]              vr_addr_buffer; // vga address to read from the buffer
-    wire [BUF_ADDR_WIDTH-1:0]              w_addr_buffer;  // write address to the buffer
-    wire [N_CHARS_WIDTH*4-1:0]             w_data_buffer;  // write data for the buffer
 
     reg wr_ena; // Write enable for the buffer
     // Write to the buffer if we are ready and the address is in the buffer range
@@ -236,6 +232,7 @@ module vga_top #(
     wire [N_CHARS_WIDTH*4-1:0] w_data_buffer; // write data for the buffer
 `ifdef FORMAL
     wire [BUF_ADDR_WIDTH-1:0] r_addr_buffer;  // AXI read address for the buffer
+    wire [N_CHARS_WIDTH*4-1:0] r_data_buffer; // AXI read data from the buffer
     assign r_addr_buffer = axil_raddr_i[AXI_ADDR_MSB-1:ADDRLSB];
 `elsif TBSIM2
     wire [N_CHARS_WIDTH*4-1:0] r_data_buffer; // AXI read data from the buffer
@@ -252,7 +249,7 @@ module vga_top #(
 `ifdef FORMAL
     vga_buffer #(.C_AXI_ADDR_WIDTH(C_AXI_ADDR_WIDTH), .C_AXI_DATA_WIDTH(C_AXI_DATA_WIDTH))
     vga_buffer_inst( .clk_i(clk25), .wr_en_i(wr_ena), .w_addr_i(w_addr_buffer), .w_strb_i(axil_wstrb_i), .r_addr_i(r_addr_buffer),
-    .vr_addr_i(vr_addr_buffer), .din_i(axil_wdata_i), .dout_o(char_addr), .f_rdata_i(f_rdata_i), 
+    .vr_addr_i(vr_addr_buffer), .din_i(axil_wdata_i), .dout_o(char_addr), .f_rdata_i(f_rdata_i), .r_req_i(axil_rreq_i), .r_data_o(r_data_buffer),
     .f_past_valid_i(f_past_valid_i), .f_reset_i(f_reset_i), .f_ready_i(f_ready_i), .clk_axi_i(clk_i));
 `elsif TBSIM2
     vga_buffer #(.C_AXI_ADDR_WIDTH(C_AXI_ADDR_WIDTH), .C_AXI_DATA_WIDTH(C_AXI_DATA_WIDTH))
@@ -298,7 +295,11 @@ module vga_top #(
     vga_fontMem vga_fontMem_inst( .clk_i(clk25), .addr_i(font_in), .dout_o(char), .addr_w_i(w_addr_rom), .wr_en_i(wr_en_rom), .din_i(w_data_rom),
                 .addr_r_i(r_addr_rom), .r_req_i(r_en_rom), .r_data_o(r_data_rom));
 
-`ifdef TBSIM2
+`ifdef FORMAL
+    // pad the data read with a 0 before each group of 7 bits
+    assign axil_rdata_o = {1'b0, r_data_buffer[N_CHARS_WIDTH*4-1-:N_CHARS_WIDTH], 1'b0, r_data_buffer[N_CHARS_WIDTH*3-1-:N_CHARS_WIDTH],
+           1'b0, r_data_buffer[N_CHARS_WIDTH*2-1-:N_CHARS_WIDTH], 1'b0, r_data_buffer[N_CHARS_WIDTH-1:0]};
+`elsif TBSIM2
     // pad the data read with a 0 before each group of 7 bits
     assign axil_rdata_o = {1'b0, r_data_buffer[N_CHARS_WIDTH*4-1-:N_CHARS_WIDTH], 1'b0, r_data_buffer[N_CHARS_WIDTH*3-1-:N_CHARS_WIDTH],
            1'b0, r_data_buffer[N_CHARS_WIDTH*2-1-:N_CHARS_WIDTH], 1'b0, r_data_buffer[N_CHARS_WIDTH-1:0]};
