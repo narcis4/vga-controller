@@ -26,7 +26,7 @@ module tb_vga_top;
     end
 
     // this test sends the characters 'A' and 'C' to write, then checks that the corresponding pixels of the screen are white, overwrites the first row
-    // of pixels of the character 'A' and checks it, writes and reads the color register and activated debug mode to read from the ROM memory
+    // of pixels of the character 'A' and checks it, writes and reads the color register and activates debug mode to read from the ROM memory
     initial begin
         // signal initialization
         clk = 1'b0;
@@ -43,7 +43,7 @@ module tb_vga_top;
         error = 1'b0;
         #0.020 axil_wready = 1'b0;
         // send the address of the last tile and the data for the character 'C'
-        #0.04 axil_wdata = 32'h43000000; // 'C' in ASCII
+        #0.04 axil_wdata = 32'h43000000; // 'C' in ASCII to the last tile
         axil_waddr = 15'h495F; // 4096 + 2399
         axil_wready = 1'b1;
         #0.04 axil_wready = 1'b0;
@@ -227,7 +227,7 @@ module tb_vga_top;
             error = 1'b1;
         end
         #0.04 axil_wdata = 32'h000000FF; // write all the pixels to 1
-        axil_waddr = 15'h1040; // first rom memory address
+        axil_waddr = 15'h1040; // first line of character 'A' memory address
         axil_wready = 1'b1;
         #0.04 axil_wready = 1'b0;
         $display("ROM memory overwrite");
@@ -276,14 +276,14 @@ module tb_vga_top;
             $display("ERROR 2");
             error = 1'b1;
         end
-        #0.04 axil_raddr = 15'h0000; // first ROM address
+        #0.04 axil_raddr = 15'h1040; // first line of character 'A' memory address
         $display("Debug mode write and ROM read");
         #0.04 if (axil_rdata != 32'h00000000) begin // check that data read is 0 when debug mode is OFF
             $display("ERROR 1");
             error = 1'b1;
         end
         #0.04 axil_wdata = 32'h00000001; // activate debug mode
-        axil_waddr = 15'h2018; 
+        axil_waddr = 15'h2018; // debug mode configuration register address
         axil_wready = 1'b1;
         #0.04 axil_wready = 1'b0;
         axil_raddr = 15'h1040;
