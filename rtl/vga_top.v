@@ -102,10 +102,13 @@ module vga_top #(
     .resetn(rstn_i),
     .clk_in1(clk_i)); // 50Mhz input clock
 `else
-    reg clk25 = 1'b0; // 25 Mhz clock
+    reg clk25; // 25 Mhz clock
     // Divide the 50 Mhz clock to generate the 25 Mhz one
     always @(posedge clk_i) begin
-        clk25 <= ~clk25;
+        if (~rstn_i)
+            clk25 <= 0;
+        else
+            clk25 <= ~clk25;
     end
 `endif
 

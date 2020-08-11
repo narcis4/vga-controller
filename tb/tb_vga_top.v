@@ -32,7 +32,7 @@ module tb_vga_top;
         clk = 1'b0;
         rstn = 1'b0;
         error = 1'b0;
-        #0.005 rstn = 1'b1;
+        #0.02 rstn = 1'b1;
         // send the address 0 for the first column and row of the screen and the data for the character 'A'
         axil_wdata = 32'd65; // 'A' in ASCII
         axil_wstrb = 4'b1111;
